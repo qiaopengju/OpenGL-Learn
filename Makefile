@@ -1,6 +1,5 @@
 GLAD = deps/glad/glad.c
 IMGUI_DIR = deps/imgui
-SOURCES = main.cpp 
 SOURCES += $(GLAD)
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp \
 	$(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
@@ -13,16 +12,22 @@ EXE = learnOpenGL
 
 #debug:
 #	@echo $(OBJS)
-all: $(EXE)
-	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS)
+all: $(EXE) main.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) main.o
 	./$(EXE)
-$(EXE): $(OBJS)
-
 2dcolor: colorRectangle.o
 	clang++ -o $(EXE) $(LIBS) $(GLAD) colorRectangle.o 
-
+	./$(EXE)
 2dtexture: 2DTexture.o
 	clang++ -o $(EXE) $(LIBS) $(GLAD) 2DTexture.o 
+	./$(EXE)
+demowindow: $(OBJS) addImgui.o
+	clang++ -o demowindow $(CLANG_FLAG) $(LIBS) $(OBJS) addImgui.o
+	./demowindow
+transform: $(OBJS) transform.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) transform.o
+	./$(EXE)
+
 
 ########################
 #Build rules
@@ -37,6 +42,7 @@ $(EXE): $(OBJS)
 	clang++ -c $(CLANG_FLAG) -o $@ $<
 glad.o: $(GLAD)
 	clang++ -c $(CLANG_FLAG) -o $@ $<
+$(EXE): $(OBJS)
 
 .PHONY: clean
 clean:
