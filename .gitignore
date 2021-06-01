@@ -1,3 +1,4 @@
 *.o
 Resource/*
 demowindow
+deps/
