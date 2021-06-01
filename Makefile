@@ -27,6 +27,9 @@ demowindow: $(OBJS) addImgui.o
 transform: $(OBJS) transform.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) transform.o
 	./$(EXE)
+3d: coordinate.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) coordinate.o
+	./$(EXE)
 
 
 ########################
