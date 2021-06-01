@@ -4,6 +4,10 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Shader.h"
 
 using namespace std;
@@ -19,6 +23,7 @@ void loadPNG(const char* filename); // 读入png, color: RGBA
 
 int main(){
     /* glfw: initalize and cofigure */
+    /*------------------------------*/
     glfwInit(); //init
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //major version 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //minor version 3.3
@@ -28,6 +33,7 @@ int main(){
 #endif
 
     /* glfw window creation */
+    /*----------------------*/
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL); //create a window
     if (window == NULL){
         cout << "Failed to create GLFW window" << endl;
@@ -38,14 +44,18 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //注册窗口大小改变回调函数
 
     /* glad: load all OpenGL function pointers */
+    /*-----------------------------------------*/
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){ //GLAD
         cout << "Failed to initialize GLAD" << endl;
         return -1;
     }
 
     /* build and compile shader */
+    /*--------------------------*/
     Shader shader("Shaders/2DTexture.vert", "Shaders/2DTexture.frag");
 
+    /* set up vertex data and buffers and configure vertex attributes */
+    /*----------------------------------------------------------------*/
     // vertice data
     float vertices[] = { // 三角形的标准化设备坐标(Normalized device coordinates), [-1, 1]
         //-----position---|-------color-----|--texture--|
@@ -59,7 +69,6 @@ int main(){
         2, 3, 0
     };
     unsigned int VBO, VAO, EBO;
-    /* set up vertex data and buffers and configure vertex attributes */
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -82,6 +91,7 @@ int main(){
     glad_glEnableVertexAttribArray(2);
 
     /* load and create texture */
+    /*-------------------------*/
     unsigned int texture1, texture2;
     /* texuter1 */
     glGenTextures(1, &texture1);
@@ -111,7 +121,23 @@ int main(){
     shader.use();
     shader.setInt("texture1", 0); //uniform sampler2D采样器, texture1设置为0号纹理单元
     shader.setInt("texture2", 1);
+
+
+    /* Imgui Setting */
+    /*---------------*/
+    // Setup imgui context
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    // Setup style
+    ImGui::StyleColorsDark();
+    // Setup backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+    // Set imgui status
+    //bool show_window = true;
+
     /* Render Loop 渲染循环 */
+    /*---------------------*/
     while(!glfwWindowShouldClose(window)){
         /* input */
         processInput(window); 
@@ -130,6 +156,17 @@ int main(){
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        /* draw imgui */
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::Begin("Setting"); {
+            //window contex
+        } ImGui::End();
+
+        ImGui::Render(); // rendering
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(window); // 交换前后缓冲
         glfwPollEvents(); // poll events 回调事件
     }
@@ -139,6 +176,11 @@ int main(){
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     /* glfw: release resource */
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate(); 
     return 0;
 }
