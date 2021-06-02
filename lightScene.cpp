@@ -19,48 +19,47 @@ using namespace std;
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 float vertices[] = {
-    /*-----positoin----|------法向量--------*/
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
 
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f, -0.5f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    -0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f
 };
 float verticesPlane[] = {
     // first triangle
@@ -111,35 +110,30 @@ int main(){
     /* build and compile shader */
     /*--------------------------*/
     Shader shaderLightCube("Shaders/lightCube.vert", "Shaders/lightCube.frag");
-    Shader shaderColorCube("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
+    Shader shaderColorCube("Shaders/1.color.vert", "Shaders/1.color.frag");
     Shader shaderPlane("Shaders/3DTexture.vert", "Shaders/plane.frag");
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
     /* Cube data set */
     /*----------------*/
-    unsigned int VBOCube, VAOColorCube, VAOLightCube;
-    glGenBuffers(1, &VBOCube);
+    unsigned int VBOCub, VAOColorCube, VAOLightCube;
+    glGenBuffers(1, &VBOCub);
     glGenVertexArrays(1, &VAOColorCube);
 
     glBindVertexArray(VAOColorCube);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOCub);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     /* 设置顶点position属性 */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glad_glEnableVertexAttribArray(0);
-    /* 设置顶点所在面法向量属性 */
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glad_glEnableVertexAttribArray(1);
 
     glGenVertexArrays(1, &VAOLightCube);
     glBindVertexArray(VAOLightCube);
-    /* 在Attribute Pointer前需要Bind VBOCube */
-    glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    /* 在Attribute Pointer前需要Bind VBOCub */
+    glBindBuffer(GL_ARRAY_BUFFER, VBOCub);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glad_glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glad_glEnableVertexAttribArray(1);
 
     /* Plane data set */
     /*-----------------*/
@@ -161,18 +155,9 @@ int main(){
     shaderPlane.setInt("texturePlane", 0);
     
     /* 设置变换 */
-    float angel[] = {0.0f, 25.0f, 0.0f};
-    glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 viewPosition = glm::vec3(0.0f, -1.0f, -6.0f);
-
-    /* 设置光照参数 */
-    float ambientStrength = 0.1f;
-    float diffuseStrength = 0.5f;
-    float specularStrength = 0.5f;
+    float angel[] = {0.0f, -25.0f, 0.0f};
     float colorLight[3] = {1.0f, 1.0f, 1.0f};
-    //glm::vec3 lightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
-    glm::vec3 lightPosition = glm::vec3(-0.6f, 1.45f, 0.7f);
-    int shininess(32); // 物体反光度
+    glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
 
     /* Imgui Setting */
     /*---------------*/
@@ -204,7 +189,7 @@ int main(){
         glm::mat4 model = glm::mat4(1.0f);      // 模型矩阵
         //model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
-        view = glm::translate(view, viewPosition);
+        view = glm::translate(view, glm::vec3(0.0f, -1.0f, -7.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
         /* draw color cube*/
@@ -213,15 +198,8 @@ int main(){
         shaderColorCube.setMat4("model", model);
         shaderColorCube.setMat4("view", view);
         shaderColorCube.setMat4("projection", projection);
-        /* light set */
         shaderColorCube.setVec3("colorObject", 1.0f, 0.5f, 0.31f);
         shaderColorCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
-        shaderColorCube.setVec3("viewPosition", viewPosition);
-        shaderColorCube.setVec3("lightPosition", lightPosition);
-        shaderColorCube.setFloat("ambientStrength", ambientStrength);
-        shaderColorCube.setFloat("diffuseStrength", diffuseStrength);
-        shaderColorCube.setFloat("specularStrength", specularStrength);
-        shaderColorCube.setInt("shininess", shininess);
 
         glBindVertexArray(VAOColorCube);
         myTransform(translate, angel[0], angel[1], angel[2], shaderColorCube);
@@ -232,10 +210,11 @@ int main(){
         shaderLightCube.setMat4("view", view);
         shaderLightCube.setMat4("projection", projection);
 
+        static glm::vec3 lightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPosition);
-        model = glm::rotate(model, glm::radians(25.f), glm::vec3(0.1f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.3f));
+        model = glm::rotate(model, glm::radians(-25.f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
         shaderLightCube.setMat4("model", model);
         shaderLightCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
         //glBindVertexArray(VAOLightCube);
@@ -254,10 +233,6 @@ int main(){
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(7.0f));
         shaderPlane.setMat4("model", model);
-        /* light set */
-        shaderPlane.setVec3("lightPosition", lightPosition);
-        shaderPlane.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
-        shaderPlane.setFloat("ambientStrength", ambientStrength);
         
         glBindVertexArray(VAOPlane);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -268,15 +243,11 @@ int main(){
         ImGui::NewFrame();
         ImGui::Begin("Configure"); {
             ImGui::ColorEdit3("Light color", colorLight);
-            ImGui::SliderFloat("Ambient strength", &ambientStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("Diffuse strength", &diffuseStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat3("Light Position", glm::value_ptr(lightPosition), -2.0f, 2.0f);
-            static const char *items[] = {"2", "4", "8", "16", "32", "64", "128", "256"};
-            static int item_current = 4;
-            shininess = (int)pow((double)2, (double)(item_current+1)); 
-            ImGui::ListBox("Shininess", &item_current, items, IM_ARRAYSIZE(items), 4);
-        //shaderColorCube.setInt("shininess", shininess);
+            ImGui::Text("Rotate");
+            ImGui::SliderFloat3("Rotate angel", angel, -90.0f, 90.0f);
+            ImGui::Text("Translate");
+            ImGui::SliderFloat3("Move color cube", value_ptr(translate), -1.5f, 1.5f);
+            ImGui::SliderFloat3("Move light cube", value_ptr(lightPosition), -3.0f, 3.0f);
         } ImGui::End();
 
         ImGui::Render(); // rendering
@@ -287,7 +258,7 @@ int main(){
     }
 
     /* optional: 超出生存期，de-allocate所有资源 */
-    glDeleteBuffers(1, &VBOCube);
+    glDeleteBuffers(1, &VBOCub);
     glDeleteVertexArrays(1, &VAOColorCube);
     glDeleteVertexArrays(1, &VAOLightCube);
     /* glfw: release resource */

@@ -12,20 +12,75 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Shader.h"
-#include "data.h"
+#include "camera.h"
 
 using namespace std;
 
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
+float vertices[] = {
+    //----position-----|--texture--
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+glm::vec3 cubePositions[] = {
+  glm::vec3( 0.0f,  0.0f,  0.0f), 
+  glm::vec3( 2.0f,  5.0f, -15.0f), 
+  glm::vec3(-1.5f, -2.2f, -2.5f),  
+  glm::vec3(-3.8f, -2.0f, -12.3f),  
+  glm::vec3( 2.4f, -0.4f, -3.5f),  
+  glm::vec3(-1.7f,  3.0f, -7.5f),  
+  glm::vec3( 1.3f, -2.0f, -2.5f),  
+  glm::vec3( 1.5f,  2.0f, -2.5f), 
+  glm::vec3( 1.5f,  0.2f, -1.5f), 
+  glm::vec3(-1.3f,  1.0f, -1.5f)  
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
 void processInput(GLFWwindow* window); // 处理输入
 void loadJpeg(const char* filename); // 读入Jpeg, color: RGB
 void loadPNG(const char* filename); // 读入png, color: RGBA
-void myRotate(float angel, Shader shader);          // 旋转图片
-void myTranslate(glm::vec3 translate, Shader shader);    // 移动图片
+void myTransform(glm::vec3 move, float angel, Shader &shader); // 对物体变换
 
 int main(){
     /* glfw: initalize and cofigure */
@@ -68,14 +123,11 @@ int main(){
     glm::mat4 projection = glm::mat4(1.0f); // 投影矩阵
     //model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
     projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
-    unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
-    unsigned int viewLoc = glGetUniformLocation(shader.ID, "view");
-    unsigned int projectionLoc = glGetUniformLocation(shader.ID, "projection");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
     /* 开启深度测试, 之后在渲染循环中需清除深度缓冲(DEPTH_BUFFER_BIT) enable Z-buffer */
     glEnable(GL_DEPTH_TEST);
 
@@ -166,10 +218,11 @@ int main(){
         glActiveTexture(GL_TEXTURE1); //绑定texture前激活纹理单元
         glBindTexture(GL_TEXTURE_2D, texture2);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        myTranslate(translate, shader); // 平移
-        myRotate(angel, shader); // 旋转angel角度
+        for (int i = 0; i < 10; i++){
+            myTransform(cubePositions[i]+translate, angel * 20 * (i+1), shader);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
@@ -177,10 +230,11 @@ int main(){
         ImGui::NewFrame();
         ImGui::Begin("Setting"); {
             ImGui::Text("Rotate");
-            ImGui::SliderFloat("Rotate angel", &angel, -360.f, 360.f);
+            ImGui::SliderFloat("Rotate angel", &angel, -18.0f, 18.0f);
             ImGui::Text("Translate");
-            ImGui::SliderFloat("Horizontal", &translate.x, -1.0f, 1.0f);
-            ImGui::SliderFloat("Vertical", &translate.y, -1.0f, 1.0f);
+            ImGui::SliderFloat("X", &translate.x, -1.0f, 1.0f);
+            ImGui::SliderFloat("Y", &translate.y, -1.0f, 1.0f);
+            ImGui::SliderFloat("Z", &translate.z, -5.0f, 5.0f);
         } ImGui::End();
 
         ImGui::Render(); // rendering
@@ -240,20 +294,11 @@ void loadPNG(const char* filename){ // 读入图片
     stbi_image_free(data); // 释放图像内存
 }
 
-void myRotate(float angel, Shader shader){ // 旋转图片
-    /* 设置变换 */
-    /*----------*/
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, glm::radians(angel), glm::vec3(0.0f, 1.0f, 0.0f)); //旋转angel度
+void myTransform(glm::vec3 move, float angel, Shader &shader){ // 对物体变换
+    glm::mat4 translate = glm::mat4(1.0f);
+    glm::mat4 rotate = glm::mat4(1.0f);
+    translate = glm::translate(translate, move);
+    rotate = glm::rotate(rotate, glm::radians(angel), glm::vec3(1.0f, 0.5f, 0.2f));
     /* 将变换矩阵传给着色器 */
-    unsigned int transformLoc = glGetUniformLocation(shader.ID, "rotate");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-}
-
-void myTranslate(glm::vec3 move, Shader shader){ // 移动图片
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::translate(trans, move);
-    /* 将变换矩阵传给着色器 */
-    unsigned int transformLoc = glGetUniformLocation(shader.ID, "translate");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+    shader.setMat4("model", translate * rotate);
 }

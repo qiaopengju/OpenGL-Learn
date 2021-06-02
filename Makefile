@@ -1,41 +1,47 @@
 GLAD = deps/glad/glad.c
 IMGUI_DIR = deps/imgui
+SOURCES = camera.cpp
 SOURCES += $(GLAD)
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp \
 	$(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))  #addsuffix:加后缀; basename:去后缀文件名; notdir: 去前面目录名
-INCLUDE = Shader.h
+INCLUDE = Shader.h Texture.h
 CLANG_FLAG =-I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 LIBS = -lglfw3 -framework OpenGL -framework IOKit -framework CoreVideo -framework Cocoa 
 EXE = learnOpenGL
 
 #debug:
 #	@echo $(OBJS)
-all: $(EXE) main.o
+all: $(EXE) $(INCLUDE) main.o	#当前进度
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) main.o
 	./$(EXE)
-2dcolor: colorRectangle.o
+2dcolor: colorRectangle.o		#2D颜色方块
 	clang++ -o $(EXE) $(LIBS) $(GLAD) colorRectangle.o 
 	./$(EXE)
-2dtexture: 2DTexture.o
+2dtexture: 2DTexture.o			#2D Texuter
 	clang++ -o $(EXE) $(LIBS) $(GLAD) 2DTexture.o 
 	./$(EXE)
-demowindow: $(OBJS) addImgui.o
+demowindow: $(OBJS) addImgui.o	#
 	clang++ -o demowindow $(CLANG_FLAG) $(LIBS) $(OBJS) addImgui.o
 	./demowindow
 transform: $(OBJS) transform.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) transform.o
 	./$(EXE)
-3d: coordinate.o
+3d: $(OBJS) coordinate.o		#3D坐标
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) coordinate.o
 	./$(EXE)
-
+lightScene: $(OBJS) lightScene.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) lightScene.o
+	./$(EXE)
+phongLighting: $(OBJS) $(INCLUDE) phongLighting.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) phongLighting.o
+	./$(EXE)
 
 ########################
 #Build rules
 ########################
-%.o: %.cpp
+%.o: %.cpp $(INCLUDE)
 # $< depend file; $@ target file
 # not all .cpp will be compiled, only compile needed
 	clang++ -c $(CLANG_FLAG) -o $@ $<
