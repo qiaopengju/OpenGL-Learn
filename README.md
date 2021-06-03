@@ -1,7 +1,7 @@
 ## LearnOpenGL
 
-![](http://118.24.109.65/photo_db/233_Markdown_IMG_lightingMap.png)
+![](README/lightingMap.png)
 
-![](http://118.24.109.65/photo_db/233_Markdown_IMG_spotLight.png)
+![](README/spotLight.png)
 
-![](http://118.24.109.65/photo_db/233_Markdown_IMG_multipleLight.png)
+![](README/multipleLight.png)
