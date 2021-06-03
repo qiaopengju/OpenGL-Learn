@@ -39,6 +39,9 @@ phongLighting: $(OBJS) $(INCLUDE) phongLighting.o
 material: $(OBJS) $(INCLUDE) material.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) material.o
 	./$(EXE)
+lightingMap: $(OBJS) $(INCLUDE) lightingMap.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) lightingMap.o
+	./$(EXE)
 
 ########################
 #Build rules
