@@ -9,19 +9,21 @@
 class Camera{
 public:
     glm::vec3 cameraPos;        // 相机位置
-    glm::vec3 cameraTarget;     // 指向点
-    glm::vec3 cameraDirection;  // 相机指向方向的反方向
-    glm::vec3 cameraRight;      // 相机右轴
+    glm::vec3 cameraFront;      // 相机指向位置
     glm::vec3 cameraUp;         // 相机上轴
-    glm::mat4 view;
+    glm::mat4 view;             // 基于该相机下的view举证
+    bool enableMouse;           // 使用鼠标控制相机
 
     Camera(){
         cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-        cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-        cameraDirection = glm::normalize(cameraPos - cameraTarget);
+        cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+        cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-        cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        enableMouse = true;
+    }
+    void updateView(){
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     }
 };
 #endif
