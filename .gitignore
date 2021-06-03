@@ -1,4 +1,5 @@
 *.o
 Resource/*
 demowindow
+learnOpenGL
 deps/

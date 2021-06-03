@@ -36,6 +36,9 @@ lightScene: $(OBJS) lightScene.o
 phongLighting: $(OBJS) $(INCLUDE) phongLighting.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) phongLighting.o
 	./$(EXE)
+material: $(OBJS) $(INCLUDE) material.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) material.o
+	./$(EXE)
 
 ########################
 #Build rules
