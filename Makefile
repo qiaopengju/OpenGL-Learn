@@ -5,7 +5,7 @@ SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui
 	$(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))  #addsuffix:加后缀; basename:去后缀文件名; notdir: 去前面目录名
-INCLUDE = Shader.h Texture.h
+INCLUDE = Shader.h Texture.h Camera.h
 CLANG_FLAG =-I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 LIBS = -lglfw3 -framework OpenGL -framework IOKit -framework CoreVideo -framework Cocoa 
 EXE = learnOpenGL

@@ -12,12 +12,15 @@
 
 #include "Shader.h"
 #include "Texture.h"
+#include "Camera.h"
 
 using namespace std;
 
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
+Camera camera; // 全局相机
+
 float vertices[] = {
     /*-----positoin----|------法向量--------*/
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -74,8 +77,10 @@ float verticesPlane[] = {
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
-void processInput(GLFWwindow* window); // 处理输入
+void mouse_callback(GLFWwindow *window, double xpos, double ypos); // 光标移动回调
+void processInput(GLFWwindow* window, Camera &camera, float deltaTime); // 处理输入
 void myTransform(glm::vec3 translate, float angelX, float angelY, float angelZ, Shader &shader); // 变换
+void HelpMarker(const char *title, const char* desc); // imGui 显示帮助
 
 int main(){
     /* glfw: initalize and cofigure */
@@ -98,6 +103,8 @@ int main(){
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //注册窗口大小改变回调函数
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // 初始禁用光标
+    glfwSetCursorPosCallback(window, mouse_callback);   // 光标位置回调
 
     /* glad: load all OpenGL function pointers */
     /*-----------------------------------------*/
@@ -190,8 +197,13 @@ int main(){
     /* Render Loop 渲染循环 */
     /*---------------------*/
     while(!glfwWindowShouldClose(window)){
+        static float deltaTime = 0.0f;  // 当前帧与上一帧的时间差
+        static float lastFrame = 0.0f;   // 上一帧时间
+        float currentTime = glfwGetTime();
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
         /* input */
-        processInput(window); 
+        processInput(window, camera, deltaTime); 
 
         /* render */
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -199,12 +211,12 @@ int main(){
 
         /* Coordinate Settings 坐标系统设置 */
         /*--------------------------------*/
-        glm::mat4 view = glm::mat4(1.0f);       // 观察矩阵
+        glm::mat4 view = camera.view;       // 观察矩阵
         glm::mat4 projection = glm::mat4(1.0f); // 投影矩阵
         glm::mat4 model = glm::mat4(1.0f);      // 模型矩阵
         //model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
-        view = glm::translate(view, viewPosition);
+        //view = glm::translate(view, viewPosition);
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
         /* draw color cube*/
@@ -235,7 +247,7 @@ int main(){
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPosition);
         model = glm::rotate(model, glm::radians(25.f), glm::vec3(0.1f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.3f));
+        model = glm::scale(model, glm::vec3(0.1f));
         shaderLightCube.setMat4("model", model);
         shaderLightCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
         //glBindVertexArray(VAOLightCube);
@@ -267,6 +279,8 @@ int main(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("Configure"); {
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Press TAB to use mouse/camera!");
+            ImGui::SameLine(); HelpMarker("Key", " ESC:exit\n W: forward\n A: left\n S: back\n D: right\n SPACE: up");
             ImGui::ColorEdit3("Light color", colorLight);
             ImGui::SliderFloat("Ambient strength", &ambientStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("Diffuse strength", &diffuseStrength, 0.0f, 1.0f);
@@ -304,9 +318,73 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){ //窗
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window){
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
+void processInput(GLFWwindow* window, Camera &camera, float deltaTime){
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ // 退出
         glfwSetWindowShouldClose(window, true);
+    }
+    /* camera input */
+    // 帧数越低，相机速度越快，保证相机移动速率平稳
+    float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){ // forward
+        camera.cameraPos += cameraSpeed * camera.cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){ // back
+        camera.cameraPos -= cameraSpeed * camera.cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // left
+        camera.cameraPos -= glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // right
+        camera.cameraPos += glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){ // up
+        camera.cameraPos += glm::vec3(0.0f, 1.0f, 0.0f) * cameraSpeed;
+    }
+    static bool tabPressFirst = true; // 设置触发器，按下Tab只有第一下有用
+    if (tabPressFirst && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){ // 按下Tab，并且检查触发器
+        if(camera.enableMouse){ // 之前是启用鼠标
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // 开启光标
+        } else{ // 之前禁用鼠标
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // 取消光标
+        }
+        camera.enableMouse = !camera.enableMouse;
+        tabPressFirst = false;
+    }
+    if (!tabPressFirst && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE){ // 释放Tab键，重置触发器
+        tabPressFirst = true;
+    }
+    camera.updateView();
+}
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos){ // 光标移动回调
+    static bool firstMouse = true;
+    static float lastX(SCR_WIDTH / 2), lastY(SCR_HEIGHT / 2); // 上一次光标位置
+    static float pitch(0.0f), yaw(-90.0f); // 俯仰角，偏航角
+    if (firstMouse) { // 光标第一次进入窗口
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // 光标的y是从下到上减少的，故用 lastY - ypos
+    lastX = xpos;
+    lastY = ypos;
+
+    static float sensitivity = 0.05f; // 鼠标灵敏度
+    if (camera.enableMouse){
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+        yaw += xoffset;
+        pitch += yoffset;
+        // 设置俯仰角范围，我们设置为89度，因为90度会翻转相机
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
+        glm::vec3 front;
+        front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+        front.y = sin(glm::radians(pitch));
+        front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+        camera.cameraFront = glm::normalize(front);
+        camera.updateView();
     }
 }
 
@@ -319,4 +397,16 @@ void myTransform(glm::vec3 move, float angelX, float angelY, float angelZ, Shade
     rotate = glm::rotate(rotate, glm::radians(angelZ), glm::vec3(0.0f, 0.0f, 1.0f));
     /* 将变换矩阵传给着色器 */
     shader.setMat4("model", translate * rotate);
+}
+
+void HelpMarker(const char* title, const char* desc){ // imGui 显示帮助
+    ImGui::TextDisabled("(?) %s", title);
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
 }

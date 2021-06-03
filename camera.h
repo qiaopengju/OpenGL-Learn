@@ -15,8 +15,8 @@ public:
     bool enableMouse;           // 使用鼠标控制相机
 
     Camera(){
-        cameraPos = glm::vec3(0.0f, 3.0f, 3.0f);
-        cameraFront = glm::vec3(-1.0f, -1.0f, -1.0f);
+        cameraPos = glm::vec3(0.0f, 1.0f, 5.0f);
+        cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
         cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
