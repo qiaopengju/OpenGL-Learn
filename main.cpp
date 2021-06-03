@@ -235,7 +235,7 @@ int main(){
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPosition);
         model = glm::rotate(model, glm::radians(25.f), glm::vec3(0.1f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.3f));
+        model = glm::scale(model, glm::vec3(0.1f));
         shaderLightCube.setMat4("model", model);
         shaderLightCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
         //glBindVertexArray(VAOLightCube);
