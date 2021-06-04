@@ -48,6 +48,9 @@ multipleLight: $(OBJS) $(INCLUDE) multipleLight.o
 model: $(OBJS) $(INCLUDE) addModel.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) addModel.o
 	./$(EXE)
+stencil: $(OBJS) $(INCLUDE) stencil.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) stencil.o
+	./$(EXE)
 
 ########################
 #Build rules

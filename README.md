@@ -6,4 +6,5 @@
 
 ![](README/multipleLight.png)
 
-![](README/model.png)
+![](README/stencil.png)
+
