@@ -2,9 +2,9 @@
 
 ![](README/lightingMap.png)
 
-![](README/spotLight.png)
-
 ![](README/multipleLight.png)
+
+![model](README/model.png)
 
 ![](README/stencil.png)
 
