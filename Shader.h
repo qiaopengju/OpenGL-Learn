@@ -34,7 +34,6 @@ public:
 private:
     void checkCompileErrors(unsigned int shader, std::string type); // 检测编译错
 };
-#endif
 
 Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath){
     // 1.读取着色器source code
@@ -147,3 +146,4 @@ void Shader::setMat3(const std::string &name, glm::mat3 value) const{
 void Shader::setMat4(const std::string &name, glm::mat4 value) const{
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
+#endif

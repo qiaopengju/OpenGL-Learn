@@ -2,4 +2,6 @@
 Resource/*
 demowindow
 learnOpenGL
+*/.DS_Store
+.DS_Store
 deps/

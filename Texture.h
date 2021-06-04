@@ -7,7 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
 
-class Texture{
+class Texture2D{
 public:
     unsigned int ID;
     GLint wrapS, wrapT, minFilter, magFilter;
@@ -17,7 +17,7 @@ public:
         // 绑定纹理前先激活纹理单元
         glBindTexture(GL_TEXTURE_2D, ID); 
     } 
-    Texture(std::string texturePath, GLint wrapS, GLint wrapT, GLint minFilter, GLint magFilter){
+    Texture2D(std::string texturePath, GLint wrapS, GLint wrapT, GLint minFilter, GLint magFilter){
         glGenTextures(1, &ID);
         glBindTexture(GL_TEXTURE_2D, ID); 
         /* set the texture wrapping parameters 设置超出纹理坐标的环绕方式*/
