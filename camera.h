@@ -14,8 +14,7 @@ public:
     glm::mat4 view;             // 基于该相机下的view举证
     bool enableMouse;           // 使用鼠标控制相机
 
-    Camera(){
-        cameraPos = glm::vec3(0.0f, 1.0f, 5.0f);
+    Camera(glm::vec3 position): cameraPos(position) {
         cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
         cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -24,6 +23,10 @@ public:
     }
     void updateView(){
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    }
+    glm::mat4 getView(){
+        updateView();
+        return view;
     }
 };
 #endif
