@@ -51,6 +51,9 @@ model: $(OBJS) $(INCLUDE) addModel.o
 stencil: $(OBJS) $(INCLUDE) stencil.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) stencil.o
 	./$(EXE)
+skybox: $(OBJS) $(INCLUDE) skybox.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) skybox.o
+	./$(EXE)
 
 ########################
 #Build rules
