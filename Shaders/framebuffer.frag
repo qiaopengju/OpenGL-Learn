@@ -40,11 +40,11 @@ void main(){
                 -1,  9, -1,
                 -1, -1, -1
             );
-        } else{ // 右上，边缘检测
+        } else{ // 右上，模糊
             kernel = float[](
-                1,  1, 1,
-                1, -8, 1,
-                1,  1, 1
+                1.0/16, 2.0/16, 1.0/16,
+                2.0/16, 4.0/16, 2.0/16,
+                1.0/16, 2.0/16, 1.0/16
             );
         }
         FragColor = cacuKernel();
@@ -52,11 +52,11 @@ void main(){
         FragColor = texture(frameBuffer, TexCoord);
         if (gl_FragCoord.y < height / 2){ // 正下方，正常
             FragColor = texture(frameBuffer, TexCoord);
-        } else{ // 正上方，模糊
+        } else{ // 正上方，边缘检测
             kernel = float[](
-                1.0/16, 2.0/16, 1.0/16,
-                2.0/16, 4.0/16, 2.0/16,
-                1.0/16, 2.0/16, 1.0/16
+                1,  1, 1,
+                1, -8, 1,
+                1,  1, 1
             );
             FragColor = cacuKernel();
         }
