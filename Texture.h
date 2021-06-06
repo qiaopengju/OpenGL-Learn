@@ -1,12 +1,17 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 #include <iostream>
+#include <string>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
 
+// OpenGL 图片坐标的原点在左上角
+// OpenGL 2D texture，data的起始位置是左下角，所以要将图片上下翻转
+// OpenGL cubeBox texture的起始位置在左上角，无需将图片上下翻转
 class Texture2D{
 public:
     unsigned int ID;
@@ -45,6 +50,40 @@ public:
         }
         stbi_image_free(data);
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+};
+
+std::string faces[] = {"right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"};
+class TextureCubemap{
+public:
+    unsigned int ID;
+
+    TextureCubemap(std::string path){
+        glGenTextures(1, &ID);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        /* load texture */
+        int width, height, nrChannels;
+        for (int i = 0; i < 6; i++){ // 遍历6个面的贴图
+            stbi_set_flip_vertically_on_load(false);
+            unsigned char *data = stbi_load((path + faces[i]).c_str(), &width, &height, &nrChannels, 0);
+            if (data){
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                    0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            } else{
+                std::cout << "Cubemap texture failed to load at path: " << path << faces[i] << std::endl;
+            }
+            stbi_image_free(data);
+        }
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    }
+    void use(){
+        glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
     }
 };
 #endif
