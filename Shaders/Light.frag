@@ -3,14 +3,13 @@
 #define MAX_SPOT_LIGHTS 1
 
 struct Material{
-    //vec3 diffuse;  // 漫反射贴图, 最终的颜色
-    //vec3 specular; // 镜面反射贴图, 最终的颜色
     sampler2D texture_diffuse1;  // 漫反射贴图
-    //sampler2D texture_diffuse2;  // 漫反射贴图
-    //sampler2D texture_diffuse3;  // 漫反射贴图
+    sampler2D texture_diffuse2;  // 漫反射贴图
+    sampler2D texture_diffuse3;  // 漫反射贴图
+
     sampler2D texture_specular1; // 镜面反射贴图
-    //sampler2D texutre_specular2; // 镜面反射贴图
-    //sampler2D texutre_specular3; // 镜面反射贴图
+    sampler2D texutre_specular2; // 镜面反射贴图
+    sampler2D texutre_specular3; // 镜面反射贴图
     int shininess;
 };
 struct DirectionalLight{    // 平行光
