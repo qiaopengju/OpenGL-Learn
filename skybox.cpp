@@ -109,6 +109,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //major version 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //minor version 3.3
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //core profile
+    glfwWindowHint(GLFW_SAMPLES, 4); // 多重采样，抗锯齿
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); //Mac OS X
 #endif
@@ -135,6 +136,7 @@ int main(){
     /* GLOBAL OpenGL state */
     /* 开启深度测试, 之后在渲染循环中需清除深度缓冲(DEPTH_BUFFER_BIT) enable Z-buffer */
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 
     /* build and compile shader */
     /*--------------------------*/
