@@ -57,6 +57,9 @@ skybox: $(OBJS) $(INCLUDE) skybox.o
 framebuffer: $(OBJS) $(INCLUDE) framebuffer_filter.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) framebuffer_filter.o
 	./$(EXE)
+normal: $(OBJS) $(INCLUDE) showNormal.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) showNormal.o
+	./$(EXE)
 
 ########################
 #Build rules
