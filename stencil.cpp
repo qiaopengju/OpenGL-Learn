@@ -20,7 +20,7 @@ using namespace std;
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera; // 全局相机
+Camera camera(glm::vec3(0.0f, 1.0f, 5.0f)); // 全局相机
 
 float vertices[] = {
     /*----positions----|------normals-------|--texture coords-*/
