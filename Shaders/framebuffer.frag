@@ -24,6 +24,7 @@ float kernel[9]; // 核
 
 vec4 cacuKernel(); // 计算核颜色
 
+// 在屏幕的6个部分生成不同的滤镜
 void main(){
     if (gl_FragCoord.x < width / 3){
         if (gl_FragCoord.y < height / 2){ // 左下，反色
