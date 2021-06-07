@@ -14,7 +14,8 @@
 class Shader {
 public:
     unsigned int ID; // 程序ID
-    Shader(const GLchar *vertexPath, const GLchar *fragmentPath); // 构造着色器
+    Shader(const GLchar *vertexPath, const GLchar *fragmentPath); // 构造着色器: vertex + fragment
+    Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLchar *geometryPath); // 构造着色器 + geometry
     void use(); // 激活着色器函数
 
     // 设置uniform 
@@ -78,6 +79,68 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath){
     // shader program
     ID = glCreateProgram(); // 创建shader程序
     glAttachShader(ID, vertex); // 将着色器Attach到shader程序
+    glAttachShader(ID, fragment);
+    glLinkProgram(ID); // 链接着色器
+    checkCompileErrors(ID, "PROGRAM");
+    // 3.删除着色器
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+}
+Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLchar *geometryPath){ // 构造着色器 + geometry
+    // 1.读取着色器source code
+    const char *vShaderCode, *fShaderCode, *gShaderCode;
+    std::string vertexCode, fragmentCode, geometryCode;
+    std::ifstream vertexFile, fragmentFile, geometryFile;
+    // ensure ifstream objects can throw exceptions:
+    vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    geometryFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try{
+        // open file
+        vertexFile.open(vertexPath);
+        fragmentFile.open(fragmentPath);
+        geometryFile.open(geometryPath);
+        std::stringstream vShaderStream, fShaderStream, gShaderStream;
+        // read file's buffer into stream
+        vShaderStream << vertexFile.rdbuf();
+        fShaderStream << fragmentFile.rdbuf();
+        gShaderStream << geometryFile.rdbuf();
+        // close file
+        vertexFile.close();
+        fragmentFile.close();
+        geometryFile.close();
+        // convert stream to string
+        vertexCode = vShaderStream.str();
+        fragmentCode = fShaderStream.str();
+        geometryCode = gShaderStream.str();
+    }
+    catch (std::ifstream::failure &e){
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULY_READ" << std::endl;
+    }
+    // 2.编译着色器
+    unsigned int vertex, fragment, geometry;
+    vShaderCode = vertexCode.c_str();
+    fShaderCode = fragmentCode.c_str();
+    gShaderCode = geometryCode.c_str();
+    // vertex shader
+    vertex = glCreateShader(GL_VERTEX_SHADER); // 创建Shader
+    glShaderSource(vertex, 1, &vShaderCode, NULL); // 设置源码
+    glCompileShader(vertex); // 编译shader
+    checkCompileErrors(vertex, "VERTEX"); // 检查编译错
+    // fragment shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &fShaderCode, NULL);
+    glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
+    // geometry shader
+    geometry = glCreateShader(GL_GEOMETRY_SHADER);
+    glShaderSource(geometry, 1, &gShaderCode, NULL);
+    glCompileShader(geometry);
+    checkCompileErrors(geometry, "GEOMETRY");
+    // shader program
+    ID = glCreateProgram(); // 创建shader程序
+    glAttachShader(ID, vertex); // 将着色器Attach到shader程序
+    glAttachShader(ID, geometry); // 链接几何着色器
     glAttachShader(ID, fragment);
     glLinkProgram(ID); // 链接着色器
     checkCompileErrors(ID, "PROGRAM");
