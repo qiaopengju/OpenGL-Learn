@@ -143,7 +143,7 @@ int main(){
     Shader shaderSkyBox("Shaders/skybox.vert", "Shaders/skybox.frag");
     Shader shaderReflect("Shaders/lightingMap.vert", "Shaders/reflect.frag");
     Shader shaderRefract("Shaders/lightingMap.vert", "Shaders/refract.frag");
-    Shader shaderTexture2D("Shaders/framebuffer.vert", "Shaders/framebuffer.frag");
+    Shader shaderNormal("Shaders/showNormal.vert", "Shaders/showNormal.frag", "Shaders/showNormal.geom");
     /* model */
     Model nanosuitModel("Resource/Model/nanosuit/nanosuit.obj");
     /* texture */
@@ -151,9 +151,6 @@ int main(){
     /* skybox */
     Skybox skybox("Resource/Img/skybox/");
     /* framebuffer */
-    Framebuffer frameBuffer;
-    shaderTexture2D.use();
-    shaderTexture2D.setInt("frameTexture", 0);
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
@@ -214,7 +211,7 @@ int main(){
     // Set imgui status
     //bool show_window = true;
     bool showColorCube = true;
-    bool showModel = false;
+    bool showModel = true;
     bool reverseColor = false;
     bool grayscale = false;
     bool blur = false;
@@ -230,11 +227,7 @@ int main(){
         /* input */
         processInput(window, camera, deltaTime); 
 
-        /* render in texture, which bind to framebuffer */
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.ID);
-        glEnable(GL_DEPTH_TEST);
 
-        //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
 
@@ -262,6 +255,15 @@ int main(){
             glBindVertexArray(VAOColorCube);
             glDrawArrays(GL_TRIANGLES, 0, 36);
             glBindVertexArray(0);
+            // draw normal
+            shaderNormal.use();
+            shaderNormal.setFloat("MAGNITUDE", 0.4);
+            shaderNormal.setMat4("model", model);
+            shaderNormal.setMat4("view", view);
+            shaderNormal.setMat4("projection", projection);
+            glBindVertexArray(VAOColorCube);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
         }
 
         /* draw model */
@@ -280,6 +282,13 @@ int main(){
             glActiveTexture(GL_TEXTURE0);
             skybox.use();
             nanosuitModel.Draw(shaderRefract);
+            // draw normal
+            shaderNormal.use();
+            shaderNormal.setFloat("MAGNITUDE", 0.04);
+            shaderNormal.setMat4("model", model);
+            shaderNormal.setMat4("view", view);
+            shaderNormal.setMat4("projection", projection);
+            nanosuitModel.Draw(shaderNormal);
         }
 
         // draw skybox at last !
@@ -290,13 +299,6 @@ int main(){
         shaderSkyBox.setMat4("projection", projection);
         skybox.Draw(shaderSkyBox);
         glDepthFunc(GL_LESS);
-
-        // render in window
-        //-----------------
-        shaderTexture2D.use();
-        shaderTexture2D.setFloat("width", SCR_WIDTH);
-        shaderTexture2D.setFloat("height", SCR_HEIGHT);
-        frameBuffer.Draw(shaderTexture2D);
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
