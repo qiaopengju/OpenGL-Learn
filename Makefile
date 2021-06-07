@@ -60,6 +60,9 @@ framebuffer: $(OBJS) $(INCLUDE) framebuffer_filter.o
 normal: $(OBJS) $(INCLUDE) showNormal.o
 	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) showNormal.o
 	./$(EXE)
+planet: $(OBJS) $(INCLUDE) planet_instance.o
+	clang++ -o $(EXE) $(CLANG_FLAG) $(LIBS) $(OBJS) planet_instance.o
+	./$(EXE)
 
 ########################
 #Build rules
