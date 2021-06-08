@@ -19,7 +19,7 @@ using namespace std;
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera; // 全局相机
+Camera camera(glm::vec3(0.0, 0.0, 3.0)); // 全局相机
 
 float vertices[] = {
     /*----positions----|------normals-------|--texture coords-*/
@@ -142,8 +142,8 @@ int main(){
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glad_glEnableVertexAttribArray(2);
     /* lighting map texture */
-    Texture textureDiffuse("Resource/Img/container2.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
-    Texture textureSepcular("Resource/Img/container2_specular.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D textureDiffuse("Resource/Img/container2.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D textureSepcular("Resource/Img/container2_specular.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     shaderColorCube.use();
     shaderColorCube.setInt("material.diffuse", 1);
     shaderColorCube.setInt("material.specular", 2);
@@ -174,7 +174,7 @@ int main(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); // important： OFFSET需要是sizeof(float)
     glEnableVertexAttribArray(1);
     /* Plane texture set */
-    Texture texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     shaderPlane.use();
     shaderPlane.setInt("texturePlane", 0);
     
