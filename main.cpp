@@ -9,98 +9,22 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "Shader.h"
-#include "Texture.h"
 #include "Camera.h"
 #include "Light.h"
-#include "Model.h"
 #include "Skybox.h"
-#include "Framebuffer.h"
+#include "ResourceManager.h"
+#include "BasicObjectRender.h"
 
 using namespace std;
 
 /* setting */
-const unsigned int SCR_WIDTH = 1300;
+const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f)); // 全局相机
-
-float vertices[] = {
-    /*----positions----|------normals-------|--texture coords-*/
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-};
-float verticesPlane[] = {
-    // first triangle
-     0.5f,  0.5f, 0.0f, 1.0f, 1.0f,   // 右上
-     0.5f, -0.5f, 0.0f, 1.0f, 0.0f,   // 右下
-    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,   // 左下
-    // second triangle
-     0.5f,  0.5f, 0.0f, 1.0f, 1.0f,   // 右上
-    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,   // 左下
-    -0.5f,  0.5f, 0.0f, 0.0f, 1.0f    // 左上
-};
-glm::vec3 cubePositions[] = {
-    glm::vec3( 0.0f,  0.0f,  0.0f),
-    glm::vec3( 2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f,  2.0f, -2.5f),
-    glm::vec3( 1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-glm::vec3 pointLightPositions[] = {
-    glm::vec3( 0.7f,  0.2f,  2.0f),
-    glm::vec3( 2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f,  2.0f, -12.0f),
-    glm::vec3( 0.0f,  0.0f, -3.0f)
-};
+Camera camera(glm::vec3(0.0f, 1.0f, 5.0f)); // 全局相机
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
 void mouse_callback(GLFWwindow *window, double xpos, double ypos); // 光标移动回调
 void processInput(GLFWwindow* window, Camera &camera, float deltaTime); // 处理输入
-glm::mat4 myTransform(glm::vec3 translate, float angelX, float angelY, float angelZ, Shader &shader); // 变换
 void HelpMarker(const char *title, const char* desc); // imGui 显示帮助
 
 int main(){
@@ -110,6 +34,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //major version 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //minor version 3.3
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //core profile
+    glfwWindowHint(GLFW_SAMPLES, 4); // 多重采样，抗锯齿
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); //Mac OS X
 #endif
@@ -134,90 +59,59 @@ int main(){
         return -1;
     }
     /* GLOBAL OpenGL state */
-    /*---------------------*/
     /* 开启深度测试, 之后在渲染循环中需清除深度缓冲(DEPTH_BUFFER_BIT) enable Z-buffer */
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 
+    /* Resource manager */
     /* build and compile shader */
     /*--------------------------*/
-    Shader shaderModel("Shaders/lightingMap.vert", "Shaders/Light.frag");
-    Shader shaderInstance("Shaders/instance.vert", "Shaders/Light.frag");
-
+    ResourceManager::LoadShader("Shaders/skybox.vert", "Shaders/skybox.frag", "skybox");
+    ResourceManager::LoadShader("Shaders/lightingMap.vert", "Shaders/reflect.frag", "reflect");
+    ResourceManager::LoadShader("Shaders/lightingMap.vert", "Shaders/refract.frag", "refract");
+    ResourceManager::LoadShader("Shaders/3DTexture.vert", "Shaders/plane.frag", "plane");
     /* model */
-    /*-------*/
-    Model planet("Resource/Model/planet/planet.obj");
-    Model rock("Resource/Model/rock/rock.obj");
-
+    ResourceManager::LoadModel("Resource/Model/nanosuit/nanosuit.obj", "nanosuit");
     /* texture */
-    /*---------*/
-
-    /* skybox */
-    /*--------*/
-
-    /* framebuffer */
-    /*-------------*/
+    ResourceManager::LoadTexture2D("Resource/Img/square.png", "plane");
+    ResourceManager::LoadTextureCubemap("Resource/Img/skybox/", "skybox");
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
-    /* 设置位移 */
-    unsigned int amount = 1000;
-    float radius(30.0), offset(15);
-    glm::mat4 *modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime());
-    for (int i = 0; i < amount; i++){
-        glm::mat4 model(1.0);
-        // 1.位移，分布在半径为radius的圆上，位移范围是[-offset, offset]
-        float angel = (float)i / (float)amount * 360.f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100 - offset;
-        float x = cos(angel) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100 - offset;
-        float y = displacement * 0.4f; // 高度y要比x和z小
-        displacement = (rand() % (int)(2 * offset * 100)) / 100 - offset;
-        float z = sin(angel) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x, y, z));
-        // 2.缩放，在[0.05, 0.15]之间缩放
-        float scale = (rand() % 10) / 100.f + 0.05;
-        model = glm::scale(model, glm::vec3(scale));
-        // 3.绕轴旋转任意角
-        float rotAngel = rand() % 360;
-        model = glm::rotate(model, rotAngel, glm::vec3(0.4f, 0.6f, 0.8f));
-        // 4.添加到model矩阵中
-        modelMatrices[i] = model;
-    }
-    // 设置实例化缓冲
-    unsigned int instanceBuffer;
-    glGenBuffers(1, &instanceBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-    for (int i = 0; i < rock.meshes.size(); i++){
-        unsigned int VAO = rock.meshes[i].VAO;
-        glBindVertexArray(VAO);
-        // 顶点属性
-        GLsizei vec4Size = sizeof(glm::vec4);
-        // 顶点着色器输入为mat4，但着色器最大允许属性为vec4，故我们设置4个vec4
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(vec4Size));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
-        
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
+    /* Skybox data set*/
+    /*----------------*/
+    Skybox skybox("skybox", ResourceManager::getTextureCubemap("skybox"));
+    ResourceManager::getShader("skybox").use();
+    ResourceManager::getShader("skybox").setInt("skybox", 0);
 
-        glBindVertexArray(0);
-    }
+    /* Cube data set */
+    /*----------------*/
 
+    /* Plane data set */
+    /*-----------------*/
+    /* Plane texture set */
+    ResourceManager::getShader("plane").use();
+    ResourceManager::getShader("plane").setInt("texturePlane", 0);
+    
     /* 设置变换 */
+    //float angel[] = {0.0f, 25.0f, 0.0f};
     glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
 
+    /* 设置光照参数 */
+    /* material */
+    float ambientMaterial[] = {1.0f, 0.5f, 0.31f};
+    float diffuseMaterial[] = {1.0f, 0.5f, 0.31f};
+    float specularMaterial[] = {1.0f, 1.0f, 1.0f};
+    int shininess(15); // 物体反光度
     /* directional light */
-    DirLight dirLight(glm::vec3(0.04f), glm::vec3(0.9f), glm::vec3(0.5f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    DirLight dirLight(glm::vec3(0.05f), glm::vec3(0.4f), glm::vec3(0.5f), glm::vec3(-0.2f, -1.0f, -0.3f));
+    /* point light */
+    int pointLightNum = 4;
+    PointLight pointLight(glm::vec3(0.05f), glm::vec3(0.8f), glm::vec3(1.0f));
+    /* spot light */
+    int spotLightNum = 1;
+    SpotLight spotLight(glm::vec3(0), glm::vec3(1.0f), glm::vec3(1.0f), camera.cameraPos, camera.cameraFront);
+    float cutOff(12.5f), outerCutOff(15.f);
 
     /* Imgui Setting */
     /*---------------*/
@@ -230,6 +124,10 @@ int main(){
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
     // Set imgui status
+    //bool show_window = true;
+    bool showPlane = true;
+    bool showColorCube = true;
+    bool showModel = true;
 
     /* Render Loop 渲染循环 */
     /*---------------------*/
@@ -242,58 +140,80 @@ int main(){
         /* input */
         processInput(window, camera, deltaTime); 
 
-
-        glClearColor(0.05f, 0.05f, 0.06f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
+        /* render */
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
 
         /* Coordinate Settings 坐标系统设置 */
         /*--------------------------------*/
         glm::mat4 view = camera.view;       // 观察矩阵
         glm::mat4 projection = glm::mat4(1.0f); // 投影矩阵
         glm::mat4 model = glm::mat4(1.0f);      // 模型矩阵
-        //model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
-        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 400.0f); //45度透视投影
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
-        /* draw planet */
-        shaderModel.use();
-        shaderModel.setMat4("model", model);
-        shaderModel.setMat4("view", view);
-        shaderModel.setMat4("projection", projection);
-        shaderModel.setVec3("viewPosition", camera.cameraPos);
-        shaderModel.setVec3("directionalLight.direction", dirLight.direction);
-        shaderModel.setVec3("directionalLight.ambient", dirLight.ambient);
-        shaderModel.setVec3("directionalLight.diffuse", dirLight.diffuse);
-        shaderModel.setVec3("directionalLight.specular", dirLight.specular);
-        shaderModel.setInt("material.shininess", 32);
-        shaderModel.setInt("pointLightNum", 0);
-
-        shaderModel.setBool("showDirLight", true);
-        shaderModel.setBool("showPointLight", false);
-        shaderModel.setBool("showSpotLight", false);
-        // draw planet
-        model = glm::translate(model, glm::vec3(7.f, 0, 0));
-        shaderModel.setMat4("model", model);
-        planet.Draw(shaderModel);
-        // draw rock
-        shaderInstance.use();
-        shaderInstance.setMat4("view", view);
-        shaderInstance.setMat4("projection", projection);
-        shaderInstance.setVec3("viewPosition", camera.cameraPos);
-        shaderInstance.setVec3("directionalLight.direction", dirLight.direction);
-        shaderInstance.setVec3("directionalLight.ambient", dirLight.ambient);
-        shaderInstance.setVec3("directionalLight.diffuse", dirLight.diffuse);
-        shaderInstance.setVec3("directionalLight.specular", dirLight.specular);
-        shaderInstance.setInt("material.shininess", 32);
-        shaderInstance.setInt("pointLightNum", 0);
-
-        shaderInstance.setBool("showDirLight", true);
-        shaderInstance.setBool("showPointLight", false);
-        shaderInstance.setBool("showSpotLight", false);
-        for (int i = 0; i < rock.meshes.size(); i++){
-            glBindVertexArray(rock.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, rock.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+        /* draw plane */
+        /*------------*/
+        if (showPlane){
+            glActiveTexture(GL_TEXTURE0);
+            ResourceManager::getTexture2D("plane").bind();
+            ResourceManager::getShader("plane").use();
+            ResourceManager::getShader("plane").setMat4("view", view);
+            ResourceManager::getShader("plane").setMat4("projection", projection);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(7.0f));
+            ResourceManager::getShader("plane").setMat4("model", model);
+            
+            static PlaneRender plane;
+            plane.Draw();
         }
+
+        /* draw color cube */
+        /*-----------------*/
+        if (showColorCube){
+            ResourceManager::getShader("reflect").use();
+            model = glm::mat4(1.0);
+            ResourceManager::getShader("reflect").setMat4("model", model);
+            ResourceManager::getShader("reflect").setMat4("view", view);
+            ResourceManager::getShader("reflect").setMat4("projection", projection);
+            ResourceManager::getShader("reflect").setVec3("cameraPos", camera.cameraPos);
+            ResourceManager::getShader("reflect").setInt("skybox", 0);
+            glActiveTexture(GL_TEXTURE0);
+            ResourceManager::getTextureCubemap("skybox").bind();
+
+            static CubeRender cube;
+            cube.Draw();
+        }
+
+        /* draw model */
+        /*------------*/
+        if (showModel){
+            //shaderColorCube.use();
+            ResourceManager::getShader("refract").use();
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0, 0.5f, 0.f));
+            model = glm::scale(model, glm::vec3(0.1f));
+            ResourceManager::getShader("refract").setMat4("model", model);
+            ResourceManager::getShader("refract").setMat4("view", view);
+            ResourceManager::getShader("refract").setMat4("projection", projection);
+            ResourceManager::getShader("refract").setVec3("cameraPos", camera.cameraPos);
+            ResourceManager::getShader("refract").setInt("skybox", 0);
+            glActiveTexture(GL_TEXTURE0);
+            ResourceManager::getTextureCubemap("skybox").bind();
+            ResourceManager::getModel("nanosuit").Draw(ResourceManager::getShader("refract"));
+        }
+
+        // draw skybox at last !
+        glDepthFunc(GL_LEQUAL);
+        ResourceManager::getShader("skybox").use();
+        ResourceManager::getTextureCubemap("skybox").bind();
+        view = glm::mat4(glm::mat3(camera.getView()));  // remove translation form the view matrix
+        ResourceManager::getShader("skybox").setMat4("view", view);
+        ResourceManager::getShader("skybox").setMat4("projection", projection);
+        skybox.Draw(ResourceManager::getShader("skybox"));
+        glDepthFunc(GL_LESS);
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
@@ -302,6 +222,10 @@ int main(){
         ImGui::Begin("Configure"); {
             ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Press TAB to use mouse/camera!");
             ImGui::SameLine(); HelpMarker("Key", " ESC:exit\n W: forward\n A: left\n S: back\n D: right\n SPACE: up");
+            ImGui::BulletText("Show Objects");
+            ImGui::Checkbox("Color Box", &showColorCube);
+            ImGui::Checkbox("Plane", &showPlane);
+            ImGui::Checkbox("Model", &showModel);
         } ImGui::End();
         ImGui::Begin("Debug");{
         } ImGui::End();
@@ -314,7 +238,6 @@ int main(){
     }
 
     /* optional: 超出生存期，de-allocate所有资源 */
-
     /* glfw: release resource */
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -397,18 +320,6 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos){ // 光标移�
         camera.cameraFront = glm::normalize(front);
         camera.updateView();
     }
-}
-
-glm::mat4 myTransform(glm::vec3 move, float angelX, float angelY, float angelZ, Shader &shader){ // 对物体变换
-    glm::mat4 translate = glm::mat4(1.0f);
-    glm::mat4 rotate = glm::mat4(1.0f);
-    translate = glm::translate(translate, move);
-    rotate = glm::rotate(rotate, glm::radians(angelX), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotate = glm::rotate(rotate, glm::radians(angelY), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotate = glm::rotate(rotate, glm::radians(angelZ), glm::vec3(0.0f, 0.0f, 1.0f));
-    /* 将变换矩阵传给着色器 */
-    shader.setMat4("model", translate * rotate);
-    return translate * rotate;
 }
 
 void HelpMarker(const char* title, const char* desc){ // imGui 显示帮助

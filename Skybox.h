@@ -3,8 +3,7 @@
 
 #include <string>
 
-#include "Texture.h"
-#include "Shader.h"
+#include "ResourceManager.h"
 
 float verticesSky[] = {
     // positions          
@@ -54,8 +53,7 @@ class Skybox{
 public:
     unsigned int ID, VAO;
 
-    Skybox(std::string path){
-        TextureCubemap texture(path);
+    Skybox(std::string cubeMapName, TextureCubemap texture){
         ID = texture.ID;
         /* Skybox data set */
         /*-----------------*/
