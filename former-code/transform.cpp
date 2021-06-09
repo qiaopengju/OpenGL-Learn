@@ -1,9 +1,16 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Shader.h"
 
 using namespace std;
@@ -16,9 +23,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height); // �
 void processInput(GLFWwindow* window); // 处理输入
 void loadJpeg(const char* filename); // 读入Jpeg, color: RGB
 void loadPNG(const char* filename); // 读入png, color: RGBA
+void myRotate(float angel, Shader shader);          // 旋转图片
+void myTranslate(glm::vec3 translate, Shader shader);    // 移动图片
 
 int main(){
     /* glfw: initalize and cofigure */
+    /*------------------------------*/
     glfwInit(); //init
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //major version 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //minor version 3.3
@@ -28,6 +38,7 @@ int main(){
 #endif
 
     /* glfw window creation */
+    /*----------------------*/
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL); //create a window
     if (window == NULL){
         cout << "Failed to create GLFW window" << endl;
@@ -38,14 +49,18 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //注册窗口大小改变回调函数
 
     /* glad: load all OpenGL function pointers */
+    /*-----------------------------------------*/
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){ //GLAD
         cout << "Failed to initialize GLAD" << endl;
         return -1;
     }
 
     /* build and compile shader */
-    Shader shader("Shaders/2DTexture.vert", "Shaders/2DTexture.frag");
+    /*--------------------------*/
+    Shader shader("Shaders/2Dtransform.vert", "Shaders/2DTexture.frag");
 
+    /* set up vertex data and buffers and configure vertex attributes */
+    /*----------------------------------------------------------------*/
     // vertice data
     float vertices[] = { // 三角形的标准化设备坐标(Normalized device coordinates), [-1, 1]
         //-----position---|-------color-----|--texture--|
@@ -59,7 +74,6 @@ int main(){
         2, 3, 0
     };
     unsigned int VBO, VAO, EBO;
-    /* set up vertex data and buffers and configure vertex attributes */
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -82,6 +96,7 @@ int main(){
     glad_glEnableVertexAttribArray(2);
 
     /* load and create texture */
+    /*-------------------------*/
     unsigned int texture1, texture2;
     /* texuter1 */
     glGenTextures(1, &texture1);
@@ -93,7 +108,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadJpeg("Resource/Img/container.jpeg");
+    loadJpeg("../Resource/Img/container.jpeg");
 
     /* texture 2 */
     glGenTextures(1, &texture2);
@@ -105,13 +120,32 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadPNG("Resource/Img/awesomeface.png");
+    loadPNG("../Resource/Img/awesomeface.png");
 
     /* 设置纹理单元 */
     shader.use();
     shader.setInt("texture1", 0); //uniform sampler2D采样器, texture1设置为0号纹理单元
     shader.setInt("texture2", 1);
+
+    /* 设置变换 */
+    float angel(0);
+    glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    /* Imgui Setting */
+    /*---------------*/
+    // Setup imgui context
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    // Setup style
+    ImGui::StyleColorsDark();
+    // Setup backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+    // Set imgui status
+    //bool show_window = true;
+
     /* Render Loop 渲染循环 */
+    /*---------------------*/
     while(!glfwWindowShouldClose(window)){
         /* input */
         processInput(window); 
@@ -129,6 +163,23 @@ int main(){
         glBindVertexArray(VAO);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        myTranslate(translate, shader);
+        myRotate(angel, shader); // 旋转angel角度
+
+        /* draw imgui */
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::Begin("Setting"); {
+            ImGui::Text("Rotate");
+            ImGui::SliderFloat("Rotate angel", &angel, -360.f, 360.f);
+            ImGui::Text("Translate");
+            ImGui::SliderFloat("Horizontal", &translate.x, -1.0f, 1.0f);
+            ImGui::SliderFloat("Vertical", &translate.y, -1.0f, 1.0f);
+        } ImGui::End();
+
+        ImGui::Render(); // rendering
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window); // 交换前后缓冲
         glfwPollEvents(); // poll events 回调事件
@@ -139,6 +190,11 @@ int main(){
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     /* glfw: release resource */
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate(); 
     return 0;
 }
@@ -177,4 +233,22 @@ void loadPNG(const char* filename){ // 读入图片
         std::cout << "FAILED TO LOAD TEXTURE\n";
     }
     stbi_image_free(data); // 释放图像内存
+}
+
+void myRotate(float angel, Shader shader){ // 旋转图片
+    /* 设置变换 */
+    /*----------*/
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::rotate(trans, glm::radians(angel), glm::vec3(0.0f, 0.0f, 1.0f)); //旋转angel度
+    /* 将变换矩阵传给着色器 */
+    unsigned int transformLoc = glGetUniformLocation(shader.ID, "rotate");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+}
+
+void myTranslate(glm::vec3 move, Shader shader){ // 移动图片
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::translate(trans, move);
+    /* 将变换矩阵传给着色器 */
+    unsigned int transformLoc = glGetUniformLocation(shader.ID, "translate");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 }

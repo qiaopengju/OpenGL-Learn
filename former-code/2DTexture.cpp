@@ -4,17 +4,13 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
 #include "Shader.h"
 
 using namespace std;
 
 /* setting */
-const unsigned int SCR_WIDTH = 1500;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 600;
+const unsigned int SCR_HEIGHT = 600;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
 void processInput(GLFWwindow* window); // 处理输入
@@ -23,7 +19,6 @@ void loadPNG(const char* filename); // 读入png, color: RGBA
 
 int main(){
     /* glfw: initalize and cofigure */
-    /*------------------------------*/
     glfwInit(); //init
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //major version 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //minor version 3.3
@@ -33,7 +28,6 @@ int main(){
 #endif
 
     /* glfw window creation */
-    /*----------------------*/
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL); //create a window
     if (window == NULL){
         cout << "Failed to create GLFW window" << endl;
@@ -44,18 +38,14 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //注册窗口大小改变回调函数
 
     /* glad: load all OpenGL function pointers */
-    /*-----------------------------------------*/
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){ //GLAD
         cout << "Failed to initialize GLAD" << endl;
         return -1;
     }
 
     /* build and compile shader */
-    /*--------------------------*/
     Shader shader("Shaders/2DTexture.vert", "Shaders/2DTexture.frag");
 
-    /* set up vertex data and buffers and configure vertex attributes */
-    /*----------------------------------------------------------------*/
     // vertice data
     float vertices[] = { // 三角形的标准化设备坐标(Normalized device coordinates), [-1, 1]
         //-----position---|-------color-----|--texture--|
@@ -69,6 +59,7 @@ int main(){
         2, 3, 0
     };
     unsigned int VBO, VAO, EBO;
+    /* set up vertex data and buffers and configure vertex attributes */
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -91,7 +82,6 @@ int main(){
     glad_glEnableVertexAttribArray(2);
 
     /* load and create texture */
-    /*-------------------------*/
     unsigned int texture1, texture2;
     /* texuter1 */
     glGenTextures(1, &texture1);
@@ -103,7 +93,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadJpeg("Resource/Img/container.jpeg");
+    loadJpeg("../Resource/Img/container.jpeg");
 
     /* texture 2 */
     glGenTextures(1, &texture2);
@@ -115,30 +105,13 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadPNG("Resource/Img/awesomeface.png");
+    loadPNG("../Resource/Img/awesomeface.png");
 
     /* 设置纹理单元 */
     shader.use();
     shader.setInt("texture1", 0); //uniform sampler2D采样器, texture1设置为0号纹理单元
     shader.setInt("texture2", 1);
-
-
-    /* Imgui Setting */
-    /*---------------*/
-    // Setup imgui context
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    // Setup style
-    ImGui::StyleColorsDark();
-    // Setup backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 150");
-    // Set imgui status
-    bool show_demo_window = true;
-    //bool show_window = true;
-
     /* Render Loop 渲染循环 */
-    /*---------------------*/
     while(!glfwWindowShouldClose(window)){
         /* input */
         processInput(window); 
@@ -157,33 +130,6 @@ int main(){
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        /* draw imgui */
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-        ImGui::Begin("Hello, world!");{                          // Create a window called "Hello, world!" and append into it.
-            static float f = 0.0f;
-            static int counter = 0;
-            static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        } ImGui::End();
-
-        ImGui::Render(); // rendering
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         glfwSwapBuffers(window); // 交换前后缓冲
         glfwPollEvents(); // poll events 回调事件
     }
@@ -193,11 +139,6 @@ int main(){
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     /* glfw: release resource */
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwDestroyWindow(window);
     glfwTerminate(); 
     return 0;
 }

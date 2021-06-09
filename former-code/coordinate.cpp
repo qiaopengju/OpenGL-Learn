@@ -12,7 +12,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Shader.h"
-#include "camera.h"
+#include "Camera.h"
 
 using namespace std;
 
@@ -165,7 +165,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadJpeg("Resource/Img/container.jpeg");
+    loadJpeg("../Resource/Img/container.jpeg");
 
     /* texture 2 */
     glGenTextures(1, &texture2);
@@ -177,7 +177,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadPNG("Resource/Img/awesomeface.png");
+    loadPNG("../Resource/Img/awesomeface.png");
 
     /* 设置纹理单元 */
     shader.use();

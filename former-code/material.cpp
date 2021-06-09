@@ -19,7 +19,7 @@ using namespace std;
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera; // 全局相机
+Camera camera(glm::vec3(0.0, 0.0, 3.0)); // 全局相机
 
 float vertices[] = {
     /*-----positoin----|------法向量--------*/
@@ -163,7 +163,7 @@ int main(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); // important： OFFSET需要是sizeof(float)
     glEnableVertexAttribArray(1);
     /* Plane texture set */
-    Texture texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     shaderPlane.use();
     shaderPlane.setInt("texturePlane", 0);
     

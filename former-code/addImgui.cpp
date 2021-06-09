@@ -1,9 +1,6 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"  // image depends lib
@@ -16,15 +13,13 @@
 using namespace std;
 
 /* setting */
-const unsigned int SCR_WIDTH = 600;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1500;
+const unsigned int SCR_HEIGHT = 1000;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
 void processInput(GLFWwindow* window); // 处理输入
 void loadJpeg(const char* filename); // 读入Jpeg, color: RGB
 void loadPNG(const char* filename); // 读入png, color: RGBA
-void myRotate(float angel, Shader shader);          // 旋转图片
-void myTranslate(glm::vec3 translate, Shader shader);    // 移动图片
 
 int main(){
     /* glfw: initalize and cofigure */
@@ -57,7 +52,7 @@ int main(){
 
     /* build and compile shader */
     /*--------------------------*/
-    Shader shader("Shaders/2Dtransform.vert", "Shaders/2DTexture.frag");
+    Shader shader("Shaders/2DTexture.vert", "Shaders/2DTexture.frag");
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
@@ -108,7 +103,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadJpeg("Resource/Img/container.jpeg");
+    loadJpeg("../Resource/Img/container.jpeg");
 
     /* texture 2 */
     glGenTextures(1, &texture2);
@@ -120,16 +115,13 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /* load image */
-    loadPNG("Resource/Img/awesomeface.png");
+    loadPNG("../Resource/Img/awesomeface.png");
 
     /* 设置纹理单元 */
     shader.use();
     shader.setInt("texture1", 0); //uniform sampler2D采样器, texture1设置为0号纹理单元
     shader.setInt("texture2", 1);
 
-    /* 设置变换 */
-    float angel(0);
-    glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
 
     /* Imgui Setting */
     /*---------------*/
@@ -142,6 +134,7 @@ int main(){
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
     // Set imgui status
+    bool show_demo_window = true;
     //bool show_window = true;
 
     /* Render Loop 渲染循环 */
@@ -163,19 +156,29 @@ int main(){
         glBindVertexArray(VAO);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        myTranslate(translate, shader);
-        myRotate(angel, shader); // 旋转angel角度
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::Begin("Setting"); {
-            ImGui::Text("Rotate");
-            ImGui::SliderFloat("Rotate angel", &angel, -360.f, 360.f);
-            ImGui::Text("Translate");
-            ImGui::SliderFloat("Horizontal", &translate.x, -1.0f, 1.0f);
-            ImGui::SliderFloat("Vertical", &translate.y, -1.0f, 1.0f);
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+        ImGui::Begin("Hello, world!");{                          // Create a window called "Hello, world!" and append into it.
+            static float f = 0.0f;
+            static int counter = 0;
+            static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         } ImGui::End();
 
         ImGui::Render(); // rendering
@@ -233,22 +236,4 @@ void loadPNG(const char* filename){ // 读入图片
         std::cout << "FAILED TO LOAD TEXTURE\n";
     }
     stbi_image_free(data); // 释放图像内存
-}
-
-void myRotate(float angel, Shader shader){ // 旋转图片
-    /* 设置变换 */
-    /*----------*/
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, glm::radians(angel), glm::vec3(0.0f, 0.0f, 1.0f)); //旋转angel度
-    /* 将变换矩阵传给着色器 */
-    unsigned int transformLoc = glGetUniformLocation(shader.ID, "rotate");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-}
-
-void myTranslate(glm::vec3 move, Shader shader){ // 移动图片
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::translate(trans, move);
-    /* 将变换矩阵传给着色器 */
-    unsigned int transformLoc = glGetUniformLocation(shader.ID, "translate");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 }

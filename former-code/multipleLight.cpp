@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -13,14 +14,13 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "Light.h"
-#include "Model.h"
 
 using namespace std;
 
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera; // 全局相机
+Camera camera(glm::vec3(0.0, 0.0, 3.0)); // 全局相机
 
 float vertices[] = {
     /*----positions----|------normals-------|--texture coords-*/
@@ -139,8 +139,6 @@ int main(){
     Shader shaderLightCube("Shaders/lightCube.vert", "Shaders/lightCube.frag");
     Shader shaderColorCube("Shaders/lightingMap.vert", "Shaders/Light.frag");
     Shader shaderPlane("Shaders/3DTexture.vert", "Shaders/plane.frag");
-    /* model */
-    Model nanosuitModel("Resource/Model/nanosuit/nanosuit.obj");
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
@@ -166,8 +164,8 @@ int main(){
     Texture2D textureDiffuse("Resource/Img/container2.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     Texture2D textureSepcular("Resource/Img/container2_specular.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     shaderColorCube.use();
-    shaderColorCube.setInt("material.texture_diffuse1", 0);
-    shaderColorCube.setInt("material.texture_specular1", 1);
+    shaderColorCube.setInt("material.texture_diffuse1", 1);
+    shaderColorCube.setInt("material.texture_specular1", 2);
 
     glGenVertexArrays(1, &VAOLightCube);
     glBindVertexArray(VAOLightCube);
@@ -217,7 +215,6 @@ int main(){
     /* spot light */
     int spotLightNum = 1;
     SpotLight spotLight(glm::vec3(0), glm::vec3(1.0f), glm::vec3(1.0f), camera.cameraPos, camera.cameraFront);
-    float cutOff(12.5f), outerCutOff(15.f);
 
     /* Imgui Setting */
     /*---------------*/
@@ -232,10 +229,9 @@ int main(){
     // Set imgui status
     //bool show_window = true;
     bool showPlane = false;
-    bool showColorCube = false;
     bool showDirLight = false;
-    bool showPointLight = true;
-    bool showSpotLight = false;
+    bool showPointLight = false;
+    bool showSpotLight = true;
 
     /* Render Loop 渲染循环 */
     /*---------------------*/
@@ -262,10 +258,12 @@ int main(){
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
-        /* Shader: shaderColorCube setting */
-        /*---------------------------------*/
+        /* draw color cube*/
         /* Be sure use shader before */
         shaderColorCube.use();
+        shaderColorCube.setMat4("model", model);
+        shaderColorCube.setMat4("view", view);
+        shaderColorCube.setMat4("projection", projection);
         /* light set */
         shaderColorCube.setVec3("viewPosition", camera.cameraPos);
         /* material */
@@ -292,10 +290,6 @@ int main(){
         }
         /* spot light */
         //shaderColorCube.setInt("spotLightNum", spotLightNum);
-        //----------------------------
-        spotLight.cutOff = glm::cos(glm::radians(cutOff));
-        spotLight.outerCutOff = glm::cos(glm::radians(outerCutOff));
-        //----------------------------
         shaderColorCube.setVec3("spotLight.position", camera.cameraPos);
         shaderColorCube.setVec3("spotLight.direction", camera.cameraFront);
         shaderColorCube.setFloat("spotLight.cutOff", spotLight.cutOff);
@@ -311,42 +305,19 @@ int main(){
         shaderColorCube.setBool("showPointLight", showPointLight);
         shaderColorCube.setBool("showSpotLight", showSpotLight);
 
-        /* draw color cube */
-        /*-----------------*/
-        if (showColorCube){
-            shaderColorCube.setMat4("model", model);
-            shaderColorCube.setMat4("view", view);
-            shaderColorCube.setMat4("projection", projection);
-            glActiveTexture(GL_TEXTURE0);
-            textureDiffuse.use();
-            glActiveTexture(GL_TEXTURE1);
-            textureSepcular.use();
-            glBindVertexArray(VAOColorCube);
-            //myTransform(translate, angel[0], angel[1], angel[2], shaderColorCube);
-            for (int i = 0; i < 10; i++){
-                float tmpAngel = 20 * i;
-                myTransform(cubePositions[i], tmpAngel, tmpAngel * 0.3, tmpAngel * 0.5, shaderColorCube);
-                glDrawArrays(GL_TRIANGLES, 0, 36);
-            }
+        glActiveTexture(GL_TEXTURE1);
+        textureDiffuse.use();
+        glActiveTexture(GL_TEXTURE2);
+        textureSepcular.use();
+        glBindVertexArray(VAOColorCube);
+        //myTransform(translate, angel[0], angel[1], angel[2], shaderColorCube);
+        for (int i = 0; i < 10; i++){
+            float tmpAngel = 20 * i;
+            myTransform(cubePositions[i], tmpAngel, tmpAngel * 0.3, tmpAngel * 0.5, shaderColorCube);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        /* draw model */
-        /*------------*/
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0, 0, 1.f));
-        model = glm::scale(model, glm::vec3(0.1f));
-        //shaderModel.use();
-        //shaderModel.setMat4("model", model);
-        //shaderModel.setMat4("view", view);
-        //shaderModel.setMat4("projection", projection);
-        //nanosuitModel.Draw(shaderModel);
-        shaderColorCube.setMat4("model", model);
-        shaderColorCube.setMat4("view", view);
-        shaderColorCube.setMat4("projection", projection);
-        nanosuitModel.Draw(shaderColorCube);
-
         /* draw Lighting cube */
-        /*--------------------*/
         if (showPointLight){
             shaderLightCube.use();
             shaderLightCube.setMat4("view", view);
@@ -363,7 +334,7 @@ int main(){
         }
 
         /* draw plane */
-        /*------------*/
+        //texturePlane.use();
         if (showPlane){
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texturePlane.ID);
@@ -391,17 +362,11 @@ int main(){
             ImGui::Checkbox("Directional light", &showDirLight);
             ImGui::Checkbox("Point light", &showPointLight);
             ImGui::Checkbox("Spot light", &showSpotLight);
-            ImGui::BulletText("Light attribution");
-            ImGui::SliderFloat("Spot cut off", &cutOff, 0, outerCutOff);
-            ImGui::SliderFloat("Spot outer cut off", &outerCutOff, cutOff, 90.f);
             ImGui::BulletText("Material attribution");
             ImGui::SliderFloat3("Ambient", ambientMaterial, 0.0f, 1.0f);
             ImGui::SliderFloat3("Diffuse", diffuseMaterial, 0.0f, 1.0f);
             ImGui::SliderFloat3("Specular", specularMaterial, 0.0f, 1.0f);
             ImGui::SliderInt("Shininess", &shininess, 1, 256);
-            ImGui::BulletText("Show Objects");
-            ImGui::Checkbox("Color Box", &showColorCube);
-            ImGui::Checkbox("Plane", &showPlane);
         } ImGui::End();
 
         ImGui::Render(); // rendering

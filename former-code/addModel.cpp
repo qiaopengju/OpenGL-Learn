@@ -5,7 +5,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -13,57 +12,59 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "Light.h"
+#include "Model.h"
 
 using namespace std;
 
 /* setting */
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-Camera camera; // 全局相机
+Camera camera(glm::vec3(0.0, 0.0, 3.0)); // 全局相机
 
 float vertices[] = {
-    /*-----positoin----|------法向量--------*/
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    /*----positions----|------normals-------|--texture coords-*/
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
 float verticesPlane[] = {
     // first triangle
@@ -74,6 +75,24 @@ float verticesPlane[] = {
      0.5f,  0.5f, 0.0f, 1.0f, 1.0f,   // 右上
     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,   // 左下
     -0.5f,  0.5f, 0.0f, 0.0f, 1.0f    // 左上
+};
+glm::vec3 cubePositions[] = {
+    glm::vec3( 0.0f,  0.0f,  0.0f),
+    glm::vec3( 2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f,  2.0f, -2.5f),
+    glm::vec3( 1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+glm::vec3 pointLightPositions[] = {
+    glm::vec3( 0.7f,  0.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); // 窗口大小改变时回调该函数
@@ -118,8 +137,10 @@ int main(){
     /* build and compile shader */
     /*--------------------------*/
     Shader shaderLightCube("Shaders/lightCube.vert", "Shaders/lightCube.frag");
-    Shader shaderColorCube("Shaders/phongLighting.vert", "Shaders/phongLighting.frag");
+    Shader shaderColorCube("Shaders/lightingMap.vert", "Shaders/Light.frag");
     Shader shaderPlane("Shaders/3DTexture.vert", "Shaders/plane.frag");
+    /* model */
+    Model nanosuitModel("Resource/Model/nanosuit/nanosuit.obj");
 
     /* set up vertex data and buffers and configure vertex attributes */
     /*----------------------------------------------------------------*/
@@ -133,19 +154,30 @@ int main(){
     glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     /* 设置顶点position属性 */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glad_glEnableVertexAttribArray(0);
     /* 设置顶点所在面法向量属性 */
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glad_glEnableVertexAttribArray(1);
+    /* 设置顶点贴图坐标属性 */
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glad_glEnableVertexAttribArray(2);
+    /* lighting map texture */
+    Texture2D textureDiffuse("Resource/Img/container2.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D textureSepcular("Resource/Img/container2_specular.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    shaderColorCube.use();
+    shaderColorCube.setInt("material.texture_diffuse1", 0);
+    shaderColorCube.setInt("material.texture_specular1", 1);
 
     glGenVertexArrays(1, &VAOLightCube);
     glBindVertexArray(VAOLightCube);
     /* 在Attribute Pointer前需要Bind VBOCube */
     glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    /* 设置顶点position属性 */
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glad_glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    /* 设置顶点所在面法向量属性 */
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glad_glEnableVertexAttribArray(1);
 
     /* Plane data set */
@@ -163,23 +195,29 @@ int main(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); // important： OFFSET需要是sizeof(float)
     glEnableVertexAttribArray(1);
     /* Plane texture set */
-    Texture texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
+    Texture2D texturePlane("Resource/Img/square.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
     shaderPlane.use();
     shaderPlane.setInt("texturePlane", 0);
     
     /* 设置变换 */
-    float angel[] = {0.0f, 25.0f, 0.0f};
+    //float angel[] = {0.0f, 25.0f, 0.0f};
     glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 viewPosition = glm::vec3(0.0f, -1.0f, -6.0f);
 
     /* 设置光照参数 */
-    float ambientStrength = 0.1f;
-    float diffuseStrength = 0.5f;
-    float specularStrength = 0.5f;
-    float colorLight[3] = {1.0f, 1.0f, 1.0f};
-    //glm::vec3 lightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
-    glm::vec3 lightPosition = glm::vec3(-0.6f, 1.45f, 0.7f);
-    int shininess(32); // 物体反光度
+    /* material */
+    float ambientMaterial[] = {1.0f, 0.5f, 0.31f};
+    float diffuseMaterial[] = {1.0f, 0.5f, 0.31f};
+    float specularMaterial[] = {1.0f, 1.0f, 1.0f};
+    int shininess(15); // 物体反光度
+    /* directional light */
+    DirLight dirLight(glm::vec3(0.05f), glm::vec3(0.4f), glm::vec3(0.5f), glm::vec3(-0.2f, -1.0f, -0.3f));
+    /* point light */
+    int pointLightNum = 4;
+    PointLight pointLight(glm::vec3(0.05f), glm::vec3(0.8f), glm::vec3(1.0f));
+    /* spot light */
+    int spotLightNum = 1;
+    SpotLight spotLight(glm::vec3(0), glm::vec3(1.0f), glm::vec3(1.0f), camera.cameraPos, camera.cameraFront);
+    float cutOff(12.5f), outerCutOff(15.f);
 
     /* Imgui Setting */
     /*---------------*/
@@ -193,6 +231,11 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 150");
     // Set imgui status
     //bool show_window = true;
+    bool showPlane = false;
+    bool showColorCube = false;
+    bool showDirLight = false;
+    bool showPointLight = true;
+    bool showSpotLight = false;
 
     /* Render Loop 渲染循环 */
     /*---------------------*/
@@ -206,7 +249,8 @@ int main(){
         processInput(window, camera, deltaTime); 
 
         /* render */
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除颜色缓冲&深度缓冲
 
         /* Coordinate Settings 坐标系统设置 */
@@ -216,63 +260,125 @@ int main(){
         glm::mat4 model = glm::mat4(1.0f);      // 模型矩阵
         //model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
-        //view = glm::translate(view, viewPosition);
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
-        /* draw color cube*/
+        /* Shader: shaderColorCube setting */
+        /*---------------------------------*/
         /* Be sure use shader before */
         shaderColorCube.use();
+        /* light set */
+        shaderColorCube.setVec3("viewPosition", camera.cameraPos);
+        /* material */
+        shaderColorCube.setVec3("material.ambient", ambientMaterial[0], ambientMaterial[1], ambientMaterial[2]);
+        shaderColorCube.setVec3("material.diffuse", diffuseMaterial[0], diffuseMaterial[1], diffuseMaterial[2]);
+        shaderColorCube.setVec3("material.specular", specularMaterial[0],specularMaterial[1],specularMaterial[2]);
+        shaderColorCube.setInt("material.shininess", shininess);
+        /* directional light */
+        shaderColorCube.setVec3("directionalLight.direction", dirLight.direction);
+        shaderColorCube.setVec3("directionalLight.ambient", dirLight.ambient);
+        shaderColorCube.setVec3("directionalLight.diffuse", dirLight.diffuse);
+        shaderColorCube.setVec3("directionalLight.specular", dirLight.specular);
+        /* point light */
+        shaderColorCube.setInt("pointLightNum", pointLightNum);
+        for (int i = 0; i < pointLightNum; i++){
+            std::string str = string("pointLight[") + to_string(i) + std::string("].");
+            shaderColorCube.setVec3(str + "position", pointLightPositions[i]);
+            shaderColorCube.setFloat(str + "constant", pointLight.constant);
+            shaderColorCube.setFloat(str + "linear", pointLight.linear);
+            shaderColorCube.setFloat(str + "quadratic", pointLight.quadratic);
+            shaderColorCube.setVec3(str + "ambient", pointLight.ambient);
+            shaderColorCube.setVec3(str + "diffuse", pointLight.diffuse);
+            shaderColorCube.setVec3(str + "specular", pointLight.specular);
+        }
+        /* spot light */
+        //shaderColorCube.setInt("spotLightNum", spotLightNum);
+        //----------------------------
+        spotLight.cutOff = glm::cos(glm::radians(cutOff));
+        spotLight.outerCutOff = glm::cos(glm::radians(outerCutOff));
+        //----------------------------
+        shaderColorCube.setVec3("spotLight.position", camera.cameraPos);
+        shaderColorCube.setVec3("spotLight.direction", camera.cameraFront);
+        shaderColorCube.setFloat("spotLight.cutOff", spotLight.cutOff);
+        shaderColorCube.setFloat("spotLight.outerCutOff", spotLight.outerCutOff);
+        shaderColorCube.setVec3("spotLight.ambient", spotLight.ambient);
+        shaderColorCube.setVec3("spotLight.diffuse", spotLight.diffuse);
+        shaderColorCube.setVec3("spotLight.specular", spotLight.specular);
+        shaderColorCube.setFloat("spotLight.constant", spotLight.constant);
+        shaderColorCube.setFloat("spotLight.linear", spotLight.linear);
+        shaderColorCube.setFloat("spotLight.quadratic", spotLight.quadratic);
+        /* whether show light */
+        shaderColorCube.setBool("showDirLight", showDirLight);
+        shaderColorCube.setBool("showPointLight", showPointLight);
+        shaderColorCube.setBool("showSpotLight", showSpotLight);
+
+        /* draw color cube */
+        /*-----------------*/
+        if (showColorCube){
+            shaderColorCube.setMat4("model", model);
+            shaderColorCube.setMat4("view", view);
+            shaderColorCube.setMat4("projection", projection);
+            glActiveTexture(GL_TEXTURE0);
+            textureDiffuse.use();
+            glActiveTexture(GL_TEXTURE1);
+            textureSepcular.use();
+            glBindVertexArray(VAOColorCube);
+            //myTransform(translate, angel[0], angel[1], angel[2], shaderColorCube);
+            for (int i = 0; i < 10; i++){
+                float tmpAngel = 20 * i;
+                myTransform(cubePositions[i], tmpAngel, tmpAngel * 0.3, tmpAngel * 0.5, shaderColorCube);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+        }
+
+        /* draw model */
+        /*------------*/
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0, 0, 1.f));
+        model = glm::scale(model, glm::vec3(0.1f));
+        //shaderModel.use();
+        //shaderModel.setMat4("model", model);
+        //shaderModel.setMat4("view", view);
+        //shaderModel.setMat4("projection", projection);
+        //nanosuitModel.Draw(shaderModel);
         shaderColorCube.setMat4("model", model);
         shaderColorCube.setMat4("view", view);
         shaderColorCube.setMat4("projection", projection);
-        /* light set */
-        shaderColorCube.setVec3("colorObject", 1.0f, 0.5f, 0.31f);
-        shaderColorCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
-        shaderColorCube.setVec3("viewPosition", viewPosition);
-        shaderColorCube.setVec3("lightPosition", lightPosition);
-        shaderColorCube.setFloat("ambientStrength", ambientStrength);
-        shaderColorCube.setFloat("diffuseStrength", diffuseStrength);
-        shaderColorCube.setFloat("specularStrength", specularStrength);
-        shaderColorCube.setInt("shininess", shininess);
-
-        glBindVertexArray(VAOColorCube);
-        myTransform(translate, angel[0], angel[1], angel[2], shaderColorCube);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        nanosuitModel.Draw(shaderColorCube);
 
         /* draw Lighting cube */
-        shaderLightCube.use();
-        shaderLightCube.setMat4("view", view);
-        shaderLightCube.setMat4("projection", projection);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPosition);
-        model = glm::rotate(model, glm::radians(25.f), glm::vec3(0.1f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f));
-        shaderLightCube.setMat4("model", model);
-        shaderLightCube.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
-        //glBindVertexArray(VAOLightCube);
-        glBindVertexArray(VAOLightCube);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        /*--------------------*/
+        if (showPointLight){
+            shaderLightCube.use();
+            shaderLightCube.setMat4("view", view);
+            shaderLightCube.setMat4("projection", projection);
+            for (int i = 0; i < pointLightNum; i++){
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, pointLightPositions[i]);
+                model = glm::scale(model, glm::vec3(0.2f));
+                shaderLightCube.setMat4("model", model);
+                shaderLightCube.setVec3("colorLight", pointLight.diffuse);
+                glBindVertexArray(VAOLightCube);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+        }
 
         /* draw plane */
-        //texturePlane.use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texturePlane.ID);
-        shaderPlane.use();
-        shaderPlane.setMat4("view", view);
-        shaderPlane.setMat4("projection", projection);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(7.0f));
-        shaderPlane.setMat4("model", model);
-        /* light set */
-        shaderPlane.setVec3("lightPosition", lightPosition);
-        shaderPlane.setVec3("colorLight", colorLight[0], colorLight[1], colorLight[2]);
-        shaderPlane.setFloat("ambientStrength", ambientStrength);
-        
-        glBindVertexArray(VAOPlane);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        /*------------*/
+        if (showPlane){
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texturePlane.ID);
+            shaderPlane.use();
+            shaderPlane.setMat4("view", view);
+            shaderPlane.setMat4("projection", projection);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(7.0f));
+            shaderPlane.setMat4("model", model);
+            
+            glBindVertexArray(VAOPlane);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
@@ -281,16 +387,21 @@ int main(){
         ImGui::Begin("Configure"); {
             ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Press TAB to use mouse/camera!");
             ImGui::SameLine(); HelpMarker("Key", " ESC:exit\n W: forward\n A: left\n S: back\n D: right\n SPACE: up");
-            ImGui::ColorEdit3("Light color", colorLight);
-            ImGui::SliderFloat("Ambient strength", &ambientStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("Diffuse strength", &diffuseStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat3("Light Position", glm::value_ptr(lightPosition), -2.0f, 2.0f);
-            static const char *items[] = {"2", "4", "8", "16", "32", "64", "128", "256"};
-            static int item_current = 4;
-            shininess = (int)pow((double)2, (double)(item_current+1)); 
-            ImGui::ListBox("Shininess", &item_current, items, IM_ARRAYSIZE(items), 4);
-        //shaderColorCube.setInt("shininess", shininess);
+            ImGui::BulletText("Show Light");
+            ImGui::Checkbox("Directional light", &showDirLight);
+            ImGui::Checkbox("Point light", &showPointLight);
+            ImGui::Checkbox("Spot light", &showSpotLight);
+            ImGui::BulletText("Light attribution");
+            ImGui::SliderFloat("Spot cut off", &cutOff, 0, outerCutOff);
+            ImGui::SliderFloat("Spot outer cut off", &outerCutOff, cutOff, 90.f);
+            ImGui::BulletText("Material attribution");
+            ImGui::SliderFloat3("Ambient", ambientMaterial, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Diffuse", diffuseMaterial, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Specular", specularMaterial, 0.0f, 1.0f);
+            ImGui::SliderInt("Shininess", &shininess, 1, 256);
+            ImGui::BulletText("Show Objects");
+            ImGui::Checkbox("Color Box", &showColorCube);
+            ImGui::Checkbox("Plane", &showPlane);
         } ImGui::End();
 
         ImGui::Render(); // rendering
