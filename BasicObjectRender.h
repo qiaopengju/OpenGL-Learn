@@ -11,6 +11,13 @@
 #include "Light.h"
 #include "ResourceManager.h"
 
+// 根据三角形计算出其切向量和副切向量，第一列是切向量，第二列是副切向量
+struct TangentCoor{
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
+};
+static TangentCoor cacTangentCoord(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 pos3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3);
+
 class RenderOBJ{
 public:
     RenderOBJ();

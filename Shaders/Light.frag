@@ -11,6 +11,10 @@ struct Material{
     sampler2D texutre_specular2; // 镜面反射贴图
     sampler2D texutre_specular3; // 镜面反射贴图
     int shininess;
+
+    sampler2D texture_normal1; // 法线贴图 
+    sampler2D texture_normal2; // 法线贴图 
+    sampler2D texture_normal3; // 法线贴图 
 };
 struct DirectionalLight{    // 平行光
     vec3 direction; 
@@ -56,7 +60,7 @@ out vec4 FragColor;
 
 uniform vec3 viewPosition;
 
-uniform Material material;                
+uniform Material material;
 uniform DirectionalLight directionalLight;
 uniform int pointLightNum;
 uniform PointLight pointLight[MAX_POINT_LIGHTS];
@@ -65,7 +69,10 @@ uniform PointLight pointLight[MAX_POINT_LIGHTS];
 uniform SpotLight spotLight;
 uniform bool showDirLight, showPointLight, showSpotLight;
 
+vec3 resultNormal; // 最终的法向量
+
 void main(){
+    resultNormal = Normal;
     vec3 result = vec3(0.f);
     vec3 viewDir = normalize(viewPosition - FragPos);
     // caculate Directional light
@@ -85,7 +92,7 @@ void main(){
 vec3 CalcDirLight(DirectionalLight light, vec3 viewDir){
     vec3 lightDir = normalize(-light.direction);
     // diffuse
-    float diff = max(dot(Normal, lightDir), 0.0f);
+    float diff = max(dot(resultNormal, lightDir), 0.0f);
     // specular
     vec3 relfectDir = reflect(-lightDir, Normal);
     float spec = pow(max(dot(relfectDir, viewDir), 0.0f), material.shininess);
@@ -98,9 +105,9 @@ vec3 CalcDirLight(DirectionalLight light, vec3 viewDir){
 vec3 CalcPointLight(PointLight light, vec3 viewDir){
     vec3 lightDir = normalize(light.position - FragPos);
     // diffuse
-    float diff = max(dot(Normal, lightDir), 0.0f);
+    float diff = max(dot(resultNormal, lightDir), 0.0f);
     // specular
-    vec3 relfectDir = reflect(-lightDir, Normal);
+    vec3 relfectDir = reflect(-lightDir, resultNormal);
     float spec = pow(max(dot(viewDir, relfectDir), 0.0f), material.shininess);
     // weaken
     float distance = length(light.position - FragPos);
@@ -115,9 +122,9 @@ vec3 CalcPointLight(PointLight light, vec3 viewDir){
 vec3 CalcSpotLight(SpotLight light, vec3 viewDir){
     vec3 lightDir = normalize(light.position - FragPos);
     // diffuse
-    float diff = max(dot(Normal, lightDir), 0.0f);
+    float diff = max(dot(resultNormal, lightDir), 0.0f);
     // specular
-    vec3 relfectDir = reflect(-lightDir, Normal);
+    vec3 relfectDir = reflect(-lightDir, resultNormal);
     float spec = pow(max(dot(viewDir, relfectDir), 0.0f), material.shininess);
     // 片段到光与光方向的夹角余弦值
     float theta = dot(normalize(light.position - FragPos), normalize(-light.direction));
