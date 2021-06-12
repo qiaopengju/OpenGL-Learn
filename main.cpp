@@ -67,13 +67,18 @@ int main(){
     /* build and compile shader */
     /*--------------------------*/
     ResourceManager::LoadShader("Shaders/skybox.vert", "Shaders/skybox.frag", "skybox");
-    ResourceManager::LoadShader("Shaders/lightingMap.vert", "Shaders/reflect.frag", "reflect");
-    ResourceManager::LoadShader("Shaders/lightingMap.vert", "Shaders/refract.frag", "refract");
-    ResourceManager::LoadShader("Shaders/3DTexture.vert", "Shaders/plane.frag", "plane");
+    ResourceManager::LoadShader("Shaders/0.Light.vert", "Shaders/0.Light.frag", "shadow");
+    ResourceManager::LoadShader("Shaders/0.depthMap.vert", "Shaders/0.depthMap.frag", "depthMap");
+    ResourceManager::LoadShader("Shaders/framebuffer.vert", "Shaders/framebuffer.frag", "debug");
+    //ResourceManager::LoadShader("Shaders/showNormal.vert", "Shaders/showNormal.frag", "Shaders/showNormal.geom", "shadow");
     /* model */
-    ResourceManager::LoadModel("Resource/Model/nanosuit/nanosuit.obj", "nanosuit");
+    ResourceManager::LoadModel("Resource/Model/cube/cube.obj", "cube");
     /* texture */
-    ResourceManager::LoadTexture2D("Resource/Img/square.png", "plane");
+    ResourceManager::LoadTexture2D("Resource/Img/woodfloor/color.jpg", "wood_color");
+    ResourceManager::LoadTexture2D("Resource/Img/woodfloor/normal.jpg", "wood_normal");
+    ResourceManager::LoadTexture2D("Resource/Img/metal/color.jpg", "plane_color");
+    ResourceManager::LoadTexture2D("Resource/Img/metal/normal.jpg", "plane_normal");
+    ResourceManager::LoadTexture2D("Resource/Img/write.png", "null");
     ResourceManager::LoadTextureCubemap("Resource/Img/skybox/", "skybox");
 
     /* set up vertex data and buffers and configure vertex attributes */
@@ -84,34 +89,54 @@ int main(){
     ResourceManager::getShader("skybox").use();
     ResourceManager::getShader("skybox").setInt("skybox", 0);
 
-    /* Cube data set */
-    /*----------------*/
-
-    /* Plane data set */
-    /*-----------------*/
-    /* Plane texture set */
-    ResourceManager::getShader("plane").use();
-    ResourceManager::getShader("plane").setInt("texturePlane", 0);
-    
-    /* 设置变换 */
-    //float angel[] = {0.0f, 25.0f, 0.0f};
-    glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
-
     /* 设置光照参数 */
+    ResourceManager::getShader("shadow").use();
+    ResourceManager::getShader("shadow").setBool("showDirLight", true);
+    ResourceManager::getShader("shadow").setBool("showPointLight", false);
+    ResourceManager::getShader("shadow").setBool("showSpotLight", false);
+    ResourceManager::getShader("shadow").setInt("material.texture_diffuse1", 0);
+    ResourceManager::getShader("shadow").setInt("material.texture_specular1", 1);
+    ResourceManager::getShader("shadow").setInt("material.texture_normal1", 2);
+    ResourceManager::getShader("shadow").setInt("depthMap", 3);
+    //debug
+    //ResourceManager::getShader("shadow").setFloat("MAGNITUDE", 0.2f);
     /* material */
-    float ambientMaterial[] = {1.0f, 0.5f, 0.31f};
-    float diffuseMaterial[] = {1.0f, 0.5f, 0.31f};
-    float specularMaterial[] = {1.0f, 1.0f, 1.0f};
-    int shininess(15); // 物体反光度
+    int shininess(32); // 物体反光度
     /* directional light */
-    DirLight dirLight(glm::vec3(0.05f), glm::vec3(0.4f), glm::vec3(0.5f), glm::vec3(-0.2f, -1.0f, -0.3f));
+    DirLight dirLight(glm::vec3(0.1f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3(-0.6f, -1.7f, 1.0f));
+    glm::vec3 direct = dirLight.direction;
     /* point light */
     int pointLightNum = 4;
     PointLight pointLight(glm::vec3(0.05f), glm::vec3(0.8f), glm::vec3(1.0f));
+    glm::vec3 pointLightPositions[] = {
+        glm::vec3(0.0f, 1.5f, 0.0),
+        glm::vec3(2.0f, 0.0f, 1.0),
+        glm::vec3(-1.0f, 0.0f, 2.0),
+    };
     /* spot light */
     int spotLightNum = 1;
     SpotLight spotLight(glm::vec3(0), glm::vec3(1.0f), glm::vec3(1.0f), camera.cameraPos, camera.cameraFront);
     float cutOff(12.5f), outerCutOff(15.f);
+
+    // framebuffer
+    const float depthWidth(2000), depthHeight(2000);
+    unsigned int depthMapFBO, depthTexture;
+    glGenFramebuffers(1, &depthMapFBO);
+    glGenTextures(1, &depthTexture);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GLfloat borderColor[] = {1.0, 1.0, 1.0};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // 设置边界深度为1，所有超出边界的图形都不在阴影中
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthWidth, depthHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Imgui Setting */
     /*---------------*/
@@ -127,7 +152,10 @@ int main(){
     //bool show_window = true;
     bool showPlane = true;
     bool showColorCube = true;
-    bool showModel = true;
+    bool showModel = false;
+    bool depthMapDebug = true;
+
+    CubeRender cube;
 
     /* Render Loop 渲染循环 */
     /*---------------------*/
@@ -143,6 +171,7 @@ int main(){
         /* render */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
+        glEnable(GL_DEPTH_TEST);
 
         /* Coordinate Settings 坐标系统设置 */
         /*--------------------------------*/
@@ -152,68 +181,133 @@ int main(){
         // 初始视口在原点，要看见图形，相机要向+z移动，相当于世界坐标向-z移动
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f); //45度透视投影
 
+        /* depth framebuffer */
+        /*-------------------*/
+        /*-------------------*/
+        glViewport(0, 0, depthWidth, depthHeight);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
+        glm::mat4 lightView = glm::lookAt(-direct, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //glm::mat4 depthMatrix = glm::lookAt(, dirLight.direction, glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 lightProjection = glm::ortho(-10.0, 10.0, -10.0, 10.0, 0.1, 10.0);
+        glm::mat4 depthMatrix = lightProjection * lightView;
+        ResourceManager::getShader("depthMap").use();
+        ResourceManager::getShader("depthMap").setMat4("depthMatrix", depthMatrix);
+
         /* draw plane */
         /*------------*/
         if (showPlane){
-            glActiveTexture(GL_TEXTURE0);
-            ResourceManager::getTexture2D("plane").bind();
-            ResourceManager::getShader("plane").use();
-            ResourceManager::getShader("plane").setMat4("view", view);
-            ResourceManager::getShader("plane").setMat4("projection", projection);
+            ResourceManager::getShader("depthMap").use();
             model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::scale(model, glm::vec3(7.0f));
-            ResourceManager::getShader("plane").setMat4("model", model);
-            
-            static PlaneRender plane;
-            plane.Draw();
+            model = glm::scale(model, glm::vec3(10.0f, 0.1f, 10.0f));
+            ResourceManager::getShader("depthMap").setMat4("model", model);
+
+            ResourceManager::getModel("cube").Draw(ResourceManager::getShader("depthMap"));
+            //cube.Draw();
         }
 
         /* draw color cube */
         /*-----------------*/
         if (showColorCube){
-            ResourceManager::getShader("reflect").use();
-            model = glm::mat4(1.0);
-            ResourceManager::getShader("reflect").setMat4("model", model);
-            ResourceManager::getShader("reflect").setMat4("view", view);
-            ResourceManager::getShader("reflect").setMat4("projection", projection);
-            ResourceManager::getShader("reflect").setVec3("cameraPos", camera.cameraPos);
-            ResourceManager::getShader("reflect").setInt("skybox", 0);
-            glActiveTexture(GL_TEXTURE0);
-            ResourceManager::getTextureCubemap("skybox").bind();
+            ResourceManager::getShader("depthMap").use();
+            for (int i = 0; i < 3; i++){
+                model = glm::mat4(1.0);
+                model = glm::translate(model, pointLightPositions[i]);
+                model = glm::scale(model, glm::vec3(0.5f));
+                ResourceManager::getShader("depthMap").setMat4("model", model);
+                ResourceManager::getModel("cube").Draw(ResourceManager::getShader("depthMap"));
+            }
+            //cube.Draw();
+        }
+        /* render as usual */
+        /*-----------------*/
+        /*-----------------*/
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // 清除颜色缓冲&深度缓冲&模板测试缓冲
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-            static CubeRender cube;
-            cube.Draw();
+        static Spirit2DRender quat;
+        ResourceManager::getShader("debug").use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        ResourceManager::getShader("debug").setInt("frameTexture", 0);
+        ResourceManager::getShader("debug").setFloat("width", SCR_WIDTH);
+        ResourceManager::getShader("debug").setFloat("height", SCR_HEIGHT);
+        if (depthMapDebug){
+            quat.Draw();
+            glEnable(GL_DEPTH_TEST);
         }
 
-        /* draw model */
+        /* Set up Shader */
+        ResourceManager::getShader("shadow").use();
+        ResourceManager::getShader("shadow").setMat4("depthMatrix", depthMatrix);
+        ResourceManager::getShader("shadow").setMat4("view", view);
+        ResourceManager::getShader("shadow").setMat4("projection", projection);
+        ResourceManager::getShader("shadow").setVec3("viewPosition", camera.cameraPos);
+        // directional light
+        //ResourceManager::getShader("shadow").setVec3("directionalLight.direction", dirLight.direction);
+        ResourceManager::getShader("shadow").setVec3("directionalLight.direction", direct);
+        ResourceManager::getShader("shadow").setVec3("directionalLight.ambient", dirLight.ambient);
+        ResourceManager::getShader("shadow").setVec3("directionalLight.diffuse", dirLight.diffuse);
+        ResourceManager::getShader("shadow").setVec3("directionalLight.specular", dirLight.specular);
+        ResourceManager::getShader("shadow").setInt("pointLightNum", pointLightNum);
+
+        /* draw plane */
         /*------------*/
-        if (showModel){
-            //shaderColorCube.use();
-            ResourceManager::getShader("refract").use();
+        if (showPlane){
+            ResourceManager::getShader("shadow").use();
             model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(0, 0.5f, 0.f));
-            model = glm::scale(model, glm::vec3(0.1f));
-            ResourceManager::getShader("refract").setMat4("model", model);
-            ResourceManager::getShader("refract").setMat4("view", view);
-            ResourceManager::getShader("refract").setMat4("projection", projection);
-            ResourceManager::getShader("refract").setVec3("cameraPos", camera.cameraPos);
-            ResourceManager::getShader("refract").setInt("skybox", 0);
+            model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+            model = glm::scale(model, glm::vec3(10.0f, 0.1f, 10.0f));
+            ResourceManager::getShader("shadow").setMat4("model", model);
+
             glActiveTexture(GL_TEXTURE0);
-            ResourceManager::getTextureCubemap("skybox").bind();
-            ResourceManager::getModel("nanosuit").Draw(ResourceManager::getShader("refract"));
+            ResourceManager::getTexture2D("plane_color").bind();
+            glActiveTexture(GL_TEXTURE1);
+            ResourceManager::getTexture2D("null").bind();
+            glActiveTexture(GL_TEXTURE2);
+            ResourceManager::getTexture2D("plane_normal").bind();
+            ResourceManager::getShader("shadow").setInt("material.shininess", shininess);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, depthTexture);
+            
+            ResourceManager::getModel("cube").Draw(ResourceManager::getShader("shadow"));
+            //cube.Draw();
+        }
+
+        /* draw color cube */
+        /*-----------------*/
+        if (showColorCube){
+            ResourceManager::getShader("shadow").use();
+            glActiveTexture(GL_TEXTURE0);
+            ResourceManager::getTexture2D("wood_color").bind();
+            glActiveTexture(GL_TEXTURE1);
+            ResourceManager::getTexture2D("null").bind();
+            glActiveTexture(GL_TEXTURE2);
+            ResourceManager::getTexture2D("wood_normal").bind();
+            ResourceManager::getShader("shadow").setInt("material.shininess", shininess * 2);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+            for (int i = 0; i < 3; i++){
+                model = glm::mat4(1.0);
+                model = glm::translate(model, pointLightPositions[i]);
+                model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+                ResourceManager::getShader("shadow").setMat4("model", model);
+                ResourceManager::getModel("cube").Draw(ResourceManager::getShader("shadow"));
+            }
+            //cube.Draw();
         }
 
         // draw skybox at last !
-        glDepthFunc(GL_LEQUAL);
-        ResourceManager::getShader("skybox").use();
-        ResourceManager::getTextureCubemap("skybox").bind();
-        view = glm::mat4(glm::mat3(camera.getView()));  // remove translation form the view matrix
-        ResourceManager::getShader("skybox").setMat4("view", view);
-        ResourceManager::getShader("skybox").setMat4("projection", projection);
-        skybox.Draw(ResourceManager::getShader("skybox"));
-        glDepthFunc(GL_LESS);
+        //glDepthFunc(GL_LEQUAL);
+        //ResourceManager::getShader("skybox").use();
+        //view = glm::mat4(glm::mat3(camera.getView()));  // remove translation form the view matrix
+        //ResourceManager::getShader("skybox").setMat4("view", view);
+        //ResourceManager::getShader("skybox").setMat4("projection", projection);
+        //skybox.Draw(ResourceManager::getShader("skybox"));
+        //glDepthFunc(GL_LESS);
 
         /* draw imgui */
         ImGui_ImplOpenGL3_NewFrame();
@@ -226,8 +320,10 @@ int main(){
             ImGui::Checkbox("Color Box", &showColorCube);
             ImGui::Checkbox("Plane", &showPlane);
             ImGui::Checkbox("Model", &showModel);
+            ImGui::SliderFloat3("light direction", glm::value_ptr(direct), -5, 5);
         } ImGui::End();
         ImGui::Begin("Debug");{
+            ImGui::Checkbox("depth map framebuffer", &depthMapDebug);
         } ImGui::End();
 
         ImGui::Render(); // rendering
