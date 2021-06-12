@@ -12,24 +12,6 @@
 
 ![](README/planet.png)
 
----
+![normalMap](README/normalMap.png)
 
-OpenGL 2D platform
-
-* 物理引擎
-
-* 碰撞检测 (分离轴定理 Separating Axis Theorem)
-
-* [ ] resource manager
-
-  * [ ] shader
-  * [ ] texture
-  * [ ] model
-
-* [ ] SpritRender
-
-  vertical *
-
-  Draw(Shader &shader)
-
-* [ ] Framebuffer manager
+![shadow](README/shadow.png)
