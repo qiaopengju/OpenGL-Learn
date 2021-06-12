@@ -62,6 +62,7 @@ void main(){
             FragColor = cacuKernel();
         }
     }
+    FragColor = vec4(vec3(texture(frameTexture, TexCoord).r), 1.0);
 }
 
 vec4 cacuKernel(){ // 计算核颜色
